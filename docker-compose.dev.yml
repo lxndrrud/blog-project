@@ -1,0 +1,91 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:14.1-alpine
+    container_name: postgres-blog
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blog
+    networks: 
+      - blog_network
+    ports:
+      - 6432:5432
+
+  #cacher:
+  #  container_name: cacher
+  #  command: ["redis-server", "/etc/redis/redis.conf"]
+  #  image: redis:7.0.5-alpine
+  #  restart: always
+  #  ports:
+  #    - 6379:6379
+  #  depends_on:
+  #    - postgres
+  #  networks: 
+  #    - blog_network
+  #  volumes:
+  #    - ./redis/redis.conf:/etc/redis/redis.conf
+
+  adminer:
+    image: adminer
+    container_name: adminer-blog
+    restart: always
+    ports:
+      - 8090:8080
+    depends_on:
+      - postgres
+    networks: 
+      - blog_network
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: backend-blog
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/go/src/goserver
+    ports:
+      - 8091:8001
+    networks: 
+      - blog_network
+
+  frontend:
+      build: 
+        context: ./frontend
+        dockerfile: Dockerfile.dev
+      container_name: frontend-blog
+      volumes:
+        - ./frontend:/usr/src/app
+      ports:
+        - 5173:5173
+      networks: 
+        - blog_network
+
+  reverse-proxy:
+    image: nginx:1.20.0
+    container_name: nginx-blog
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+        - '80:80'
+    links:
+        - backend
+        - postgres
+        - adminer
+    networks:
+        - blog_network
+    volumes:
+        - './backend/storage:/var/www/storage'
+        - './nginx:/var/log/nginx'
+        - './nginx/dev/conf.d:/etc/nginx/conf.d'
+
+
+
+networks:
+  blog_network:
+    external: False

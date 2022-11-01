@@ -1,0 +1,3 @@
+
+# Up migrations
+/home/lxndrrud/migrate/migrate -database 'postgres://user:password@postgres-blog/blog?sslmode=disable' -path db/migrations up
