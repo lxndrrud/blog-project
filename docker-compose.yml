@@ -27,19 +27,30 @@ services:
   #  volumes:
   #    - ./redis/redis.conf:/etc/redis/redis.conf
 
-  pgadmin: 
-    container_name: pgadmin-blog
-    image: dpage/pgadmin4:6.13
+  #pgadmin: 
+  #  container_name: pgadmin-blog
+  #  image: dpage/pgadmin4:6.13
+  #  restart: always
+  #  ports:
+  #    - 9000:80
+  #  depends_on:
+  #    - postgres
+  #  networks: 
+  #    - blog_network
+  #  environment:
+  #    - PGADMIN_DEFAULT_EMAIL=admin@admin.ru
+  #    - PGADMIN_DEFAULT_PASSWORD=123456
+
+  adminer:
+    image: adminer
+    container_name: adminer-blog
     restart: always
     ports:
-      - 9000:80
+      - 8090:8080
     depends_on:
       - postgres
     networks: 
       - blog_network
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.ru
-      - PGADMIN_DEFAULT_PASSWORD=123456
 
   backend:
     build: 
