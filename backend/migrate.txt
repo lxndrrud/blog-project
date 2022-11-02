@@ -1,3 +1,7 @@
 
-# Up migrations
-/home/lxndrrud/migrate/migrate -database 'postgres://user:password@postgres-blog/blog?sslmode=disable' -path db/migrations up
+# Up migrations and run seeds
+docker exec -it backend-blog go run ./db/script.go -m=up -s=y
+
+# Down migrations
+docker exec -it backend-blog go run ./db/script.go -m=down
+

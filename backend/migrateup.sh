@@ -1,0 +1,1 @@
+docker exec -it backend-blog go run ./db/script.go -m=up -s=y

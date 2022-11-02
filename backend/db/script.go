@@ -87,6 +87,7 @@ func main() {
 	}
 
 	if seedsFlag == "y" {
+		fmt.Println("Run seeds!")
 		runTestSeeds()
 	}
 }
