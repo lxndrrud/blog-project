@@ -24,5 +24,5 @@ func main() {
 	}
 	app := routers.BootstrapRouter(db)
 
-	app.Run(":8081")
+	app.Run(":8001")
 }
