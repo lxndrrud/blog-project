@@ -8,26 +8,26 @@ type IError interface {
 }
 
 func NewError(code int, message string) IError {
-	return &CustomError{
+	return &customError{
 		message: message,
 		code:    code,
 	}
 }
 
-type CustomError struct {
+type customError struct {
 	message string
 	code    int
 }
 
-func (c *CustomError) GetMessage() string {
+func (c *customError) GetMessage() string {
 	return c.message
 }
 
-func (c *CustomError) GetCode() int {
+func (c *customError) GetCode() int {
 	return c.code
 }
 
-func (c *CustomError) MarshalJSON() ([]byte, error) {
+func (c *customError) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]any{
 		"message": c.message,
 	})

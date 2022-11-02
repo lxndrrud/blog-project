@@ -22,7 +22,7 @@ func NewUserController(db *sqlx.DB) IUserController {
 
 type userController struct {
 	userService interface {
-		GetUserById(idUser int64) (models.User, models.IError)
+		GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
 	}
 }
 
@@ -40,13 +40,13 @@ func (c userController) GetUserById(ctx *gin.Context) {
 		})
 		return
 	}
-	user, errService := c.userService.GetUserById(idUser)
+	user, posts, errService := c.userService.GetUserAndPosts(idUser)
 	if errService != nil {
 		ctx.JSON(errService.GetCode(), errService)
 		return
 	}
 	ctx.JSON(http.StatusOK, map[string]any{
-		"user": user,
+		"user":  user,
+		"posts": posts,
 	})
-
 }

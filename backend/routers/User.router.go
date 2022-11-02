@@ -9,6 +9,6 @@ import (
 func setupUserRouter(router *gin.RouterGroup, db *sqlx.DB) {
 	controller := controllers.NewUserController(db)
 
-	router.GET("/user", controller.GetUserById)
+	router.GET("/profile", controller.GetUserById)
 
 }

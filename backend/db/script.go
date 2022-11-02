@@ -46,14 +46,18 @@ func runTestSeeds() {
 			INSERT INTO "public"."roles" (title) VALUES 
 				('Администратор');
 
-			INSERT INTO "public"."permissions" (title) VALUES 
-				('Создавать посты');
+			INSERT INTO "public"."permissions" (title, code) VALUES 
+				('Создавать посты', 'СОЗД_ПОСТЫ');
 
 			INSERT INTO "public"."roles_permissions" (id_role, id_permission) VALUES 
 				(1, 1);
 
 			INSERT INTO "public"."users" (login, password, id_role) VALUES 
 				('admin', '123456', 1);
+
+			INSERT INTO "public"."posts" (title, text, id_author, views, approved, time_end) VALUES
+				('test title', 'test text', 1, DEFAULT, DEFAULT, '2023-01-01T10:00:00'),
+				('test title 2', 'test text 2', 1, DEFAULT, TRUE, '2023-01-01T10:00:00');
 		`)
 	if err != nil {
 		fmt.Println(err)
@@ -65,8 +69,8 @@ func main() {
 	var migrationsFlag string
 	var seedsFlag string
 
-	flag.StringVar(&migrationsFlag, "m", "migrations", "Direction of migration (up or down).")
-	flag.StringVar(&seedsFlag, "s", "seeds", "Direction of seeds after migrations (up or down).")
+	flag.StringVar(&migrationsFlag, "m", "migrations", "Direction of migration ('up' or 'down').")
+	flag.StringVar(&seedsFlag, "s", "seeds", "Direction of seeds after migrations (only 'y' if needed).")
 	flag.Parse()
 
 	// Подключиться к миграциям
