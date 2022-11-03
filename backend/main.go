@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/lxndrrud/blog-project/routers"
@@ -12,6 +14,7 @@ import (
 func main() {
 	viper.SetConfigFile(".env")
 	viper.ReadInConfig()
+	// Подключение к основной базе данных
 	db, err := sqlx.Connect(
 		"postgres",
 		"host="+viper.GetString("DB_HOST")+" "+
@@ -22,7 +25,19 @@ func main() {
 	if err != nil {
 		log.Fatalln("Подключение к базе данных не осуществлено!" + err.Error())
 	}
-	app := routers.BootstrapRouter(db)
+	// Подключение к кэшу
+	fmt.Println(viper.GetString("CACHE_HOST")+":"+viper.GetString("CACHE_PORT"), viper.GetString("CACHE_PASSWORD"))
+	redisConn := redis.NewClient(&redis.Options{
+		Addr:     viper.GetString("CACHE_HOST") + ":" + viper.GetString("CACHE_PORT"),
+		Password: viper.GetString("CACHE_PASSWORD"),
+		DB:       0,
+	})
+	_, err = redisConn.Ping(redisConn.Context()).Result()
+	if err != nil {
+		log.Fatalln("Подключение к кэшу не осуществлено!" + err.Error())
+	}
+	defer redisConn.Close()
+	app := routers.BootstrapRouter(db, redisConn)
 
 	app.Run(":8001")
 }

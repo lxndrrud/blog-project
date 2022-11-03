@@ -2,10 +2,11 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 )
 
-func BootstrapRouter(db *sqlx.DB) *gin.Engine {
+func BootstrapRouter(db *sqlx.DB, redisConn *redis.Client) *gin.Engine {
 	app := gin.Default()
 
 	// Префиксный роутер
@@ -18,11 +19,11 @@ func BootstrapRouter(db *sqlx.DB) *gin.Engine {
 
 	// Пользователи
 	userRouter := prefixRouter.Group("/users")
-	setupUserRouter(userRouter, db)
+	setupUserRouter(userRouter, db, redisConn)
 
 	// Посты
 	postsRouter := prefixRouter.Group("/posts")
-	setupPostRouter(postsRouter, db)
+	setupPostRouter(postsRouter, db, redisConn)
 
 	return app
 }

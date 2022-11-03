@@ -8,6 +8,7 @@ import (
 type IPostsRepo interface {
 	GetUserPosts(idUser int64) ([]models.Post, error)
 	GetApprovedPosts() ([]models.Post, error)
+	InsertPost(post models.Post) error
 }
 
 func NewPostsRepo(db *sqlx.DB) IPostsRepo {
@@ -76,4 +77,17 @@ func (c *postsRepo) GetUserPosts(idUser int64) ([]models.Post, error) {
 		idUser)
 
 	return posts, err
+}
+
+func (c postsRepo) InsertPost(post models.Post) error {
+	_, err := c.db.Exec(
+		`
+		INSERT INTO "public"."posts"(title, text, id_author, time_end) VALUES
+			($1, $2, $3, $4);
+		`,
+		post.Title,
+		post.Text,
+		post.IdAuthor,
+		post.TimeEnd)
+	return err
 }

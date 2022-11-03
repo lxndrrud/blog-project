@@ -53,7 +53,7 @@ func runTestSeeds() {
 				(1, 1);
 
 			INSERT INTO "public"."users" (login, password, id_role) VALUES 
-				('admin', '123456', 1);
+				('admin', '$2a$10$sE/CMuBOJ4UP8oqRNYtCu.EvDKcsX.C853Nx2sRTgONzdKMGyAUOu', 1);
 
 			INSERT INTO "public"."posts" (title, text, id_author, views, approved, time_end) VALUES
 				('test title', 'test text', 1, DEFAULT, DEFAULT, '2023-01-01T10:00:00'),

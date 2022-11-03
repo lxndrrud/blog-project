@@ -13,19 +13,19 @@ services:
     ports:
       - 5432:5432
 
-  #cacher:
-  #  container_name: cacher
-  #  command: ["redis-server", "/etc/redis/redis.conf"]
-  #  image: redis:7.0.5-alpine
-  #  restart: always
-  #  ports:
-  #    - 6379:6379
-  #  depends_on:
-  #    - postgres
-  #  networks: 
-  #    - blog_network
-  #  volumes:
-  #    - ./redis/redis.conf:/etc/redis/redis.conf
+  cacher:
+    container_name: cacher-blog
+    command: ["redis-server", "/etc/redis/redis.conf"]
+    image: redis:7.0.5-alpine
+    restart: always
+    ports:
+      - 7379:6379
+    depends_on:
+      - postgres
+    networks: 
+      - blog_network
+    volumes:
+      - ./redis/redis.conf:/etc/redis/redis.conf
 
   #pgadmin: 
   #  container_name: pgadmin-blog

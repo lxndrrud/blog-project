@@ -6,6 +6,7 @@ import (
 )
 
 type IPermissionsRepo interface {
+	GetPermissionsList(idUser int64) ([]models.Permission, error)
 }
 
 func NewPermissionsRepo(db *sqlx.DB) IPermissionsRepo {
