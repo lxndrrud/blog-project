@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
     password VARCHAR(200) NOT NULL,
     CONSTRAINT fk_role
         FOREIGN KEY (id_role)
-            REFERENCES "public"."permissions"(id)
+            REFERENCES "public"."roles"(id)
 );
 
 COMMENT ON COLUMN users.login IS 'Логин пользователя';

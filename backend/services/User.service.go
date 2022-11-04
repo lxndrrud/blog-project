@@ -108,3 +108,7 @@ func (c userService) LoginUser(login, password string) (string, models.IError) {
 	}
 	return session.Token, models.NewError(0, "")
 }
+
+func (c userService) RegisterUser(login, password string) string {
+	return ""
+}

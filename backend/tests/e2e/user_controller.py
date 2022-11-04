@@ -21,7 +21,7 @@ class TestUserProfile:
 
     def test_NOT_FOUND_get_user_profile(self):
         try:
-            resp = requests.get("http://localhost/backend/users/profile?idUser=2")
+            resp = requests.get("http://localhost/backend/users/profile?idUser=114")
             if resp.status_code != 404:
                 raise Exception(f"Статус не равен 404: {resp.status_code}")
             

@@ -14,7 +14,8 @@ import (
 
 type IPostService interface {
 	GetApprovedPosts() ([]models.Post, models.IError)
-	CreatePost(title, text, token string, timeEnd *time.Time) models.IError
+	CreatePost(title, text, annotation, token string,
+		timeStart *time.Time, timeEnd *time.Time) models.IError
 }
 
 func NewPostService(db *sqlx.DB, redisConn *redis.Client) IPostService {
@@ -48,7 +49,8 @@ func (c postService) GetApprovedPosts() ([]models.Post, models.IError) {
 	return posts, nil
 }
 
-func (c postService) CreatePost(title, text, token string, timeEnd *time.Time) models.IError {
+func (c postService) CreatePost(title, text, annotation, token string,
+	timeStart *time.Time, timeEnd *time.Time) models.IError {
 	// Получить сессию по токену
 	userSession, err := c.userSessionRepo.GetUserSession(token)
 	if err == redis.Nil {
@@ -67,6 +69,13 @@ func (c postService) CreatePost(title, text, token string, timeEnd *time.Time) m
 		return models.NewError(http.StatusForbidden, "Вам запрещено создавать посты!")
 	}
 
+	dbTimeStart := sql.NullTime{}
+	if timeStart != nil {
+		dbTimeStart = sql.NullTime{
+			Valid: true,
+			Time:  *timeStart,
+		}
+	}
 	dbTimeEnd := sql.NullTime{}
 	if timeEnd != nil {
 		dbTimeEnd = sql.NullTime{
@@ -75,10 +84,12 @@ func (c postService) CreatePost(title, text, token string, timeEnd *time.Time) m
 		}
 	}
 	post := models.Post{
-		Title:    title,
-		Text:     text,
-		TimeEnd:  dbTimeEnd,
-		IdAuthor: userSession.IdUser,
+		Title:      title,
+		Annotation: annotation,
+		Text:       text,
+		TimeStart:  dbTimeStart,
+		TimeEnd:    dbTimeEnd,
+		IdAuthor:   userSession.IdUser,
 	}
 	err = c.postRepo.InsertPost(post)
 	if err != nil {

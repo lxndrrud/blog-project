@@ -44,20 +44,21 @@ func connectMigrations() *migrate.Migrate {
 func runTestSeeds() {
 	_, err := globalDB.Exec(`
 			INSERT INTO "public"."roles" (title) VALUES 
-				('Администратор');
+				('Администратор'), ('Блогер');
 
 			INSERT INTO "public"."permissions" (title, code) VALUES 
 				('Создавать посты', 'СОЗД_ПОСТЫ');
 
 			INSERT INTO "public"."roles_permissions" (id_role, id_permission) VALUES 
-				(1, 1);
+				(1, 1), (2, 1);
 
 			INSERT INTO "public"."users" (login, password, id_role) VALUES 
-				('admin', '$2a$10$sE/CMuBOJ4UP8oqRNYtCu.EvDKcsX.C853Nx2sRTgONzdKMGyAUOu', 1);
+				('admin', '$2a$10$sE/CMuBOJ4UP8oqRNYtCu.EvDKcsX.C853Nx2sRTgONzdKMGyAUOu', 1),
+				('bloger', '$2a$10$sE/CMuBOJ4UP8oqRNYtCu.EvDKcsX.C853Nx2sRTgONzdKMGyAUOu', 2);
 
-			INSERT INTO "public"."posts" (title, text, id_author, views, approved, time_end) VALUES
-				('test title', 'test text', 1, DEFAULT, DEFAULT, '2023-01-01T10:00:00'),
-				('test title 2', 'test text 2', 1, DEFAULT, TRUE, '2023-01-01T10:00:00');
+			INSERT INTO "public"."posts" (title, annotation, text, id_author, views, approved, time_start, time_end) VALUES
+			('test title', 'test annotation', 'test text', 1, DEFAULT, DEFAULT, DEFAULT, '2023-01-01T10:00:00'),
+			('test title 2', 'test annotation', 'test text 2', 1, DEFAULT, TRUE, DEFAULT, '2023-01-01T10:00:00');
 		`)
 	if err != nil {
 		fmt.Println(err)
