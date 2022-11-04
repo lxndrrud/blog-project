@@ -14,6 +14,7 @@ import (
 type IUserService interface {
 	GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
 	LoginUser(login, password string) (string, models.IError)
+	RegisterUser(login, password string) models.IError
 }
 
 func NewUserService(db *sqlx.DB, redisConn *redis.Client) IUserService {
@@ -30,6 +31,7 @@ type userService struct {
 	userRepo interface {
 		GetUserById(idUser int64) (models.User, error)
 		GetUserByLogin(login string) (models.User, error)
+		InsertUser(login, password string) (int64, error)
 	}
 	postsRepo interface {
 		GetUserPosts(idUser int64) ([]models.Post, error)
@@ -109,6 +111,18 @@ func (c userService) LoginUser(login, password string) (string, models.IError) {
 	return session.Token, models.NewError(0, "")
 }
 
-func (c userService) RegisterUser(login, password string) string {
-	return ""
+func (c userService) RegisterUser(login, password string) models.IError {
+	// Проверка существующего пользователя
+	_, err := c.userRepo.GetUserByLogin(login)
+	if err != sql.ErrNoRows {
+		return models.NewError(http.StatusConflict,
+			"Пользователь с таким логином уже существует!")
+	}
+	// Создание нового пользователя
+	_, err = c.userRepo.InsertUser(login, password)
+	if err != nil {
+		return models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	return models.NewError(0, "")
 }

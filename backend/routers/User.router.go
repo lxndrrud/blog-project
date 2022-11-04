@@ -14,4 +14,6 @@ func setupUserRouter(router *gin.RouterGroup, db *sqlx.DB, redisConn *redis.Clie
 
 	router.POST("/login", controller.LoginUser)
 
+	router.POST("/new", controller.RegisterUser)
+
 }

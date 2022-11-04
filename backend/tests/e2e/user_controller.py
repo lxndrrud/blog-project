@@ -80,10 +80,66 @@ class TestUserLogin:
             print(f"OK test_NOT_FOUND_login_user_wrong_password")
         except Exception as e:
             print(f"FAIL test_NOT_FOUND_login_user_wrong_password: {e}")
-        
 
+    
+class TestUserRegister:
+    def launch(self):
+        print("# Test User Register")
+        self.test_FAIL_register_user_existing_user()
+        self.test_FAIL_register_user_without_login()
+        self.test_FAIL_register_user_without_password()
+        self.test_OK_register_user()
+    
+    def test_OK_register_user(self):
+        try:
+            resp = requests.post("http://localhost/backend/users/new", {
+                "login": "test_bloger",
+                "password": "123456"
+            })
+            if resp.status_code != 201:
+                raise Exception(f"Статус не равен 201: {resp.status_code} - {resp.json()}")
+            print(f"OK test_OK_register_user")
+        except Exception as e:
+            print(f"FAIL test_OK_register_user: {e}")
+
+    def test_FAIL_register_user_existing_user(self):
+        try:
+            resp = requests.post("http://localhost/backend/users/new", {
+                "login": "admin",
+                "password": "123456"
+            })
+            if resp.status_code != 409:
+                raise Exception(f"Статус не равен 201: {resp.status_code} - {resp.json()}")
+            print(f"OK test_FAIL_register_user_existing_user")
+        except Exception as e:
+            print(f"FAIL test_FAIL_register_user_existing_user: {e}")
+
+    def test_FAIL_register_user_without_login(self):
+        try:
+            resp = requests.post("http://localhost/backend/users/new", {
+                #! "login": "admin",
+                "password": "123456"
+            })
+            if resp.status_code != 400:
+                raise Exception(f"Статус не равен 400: {resp.status_code} - {resp.json()}")
+            print(f"OK test_FAIL_register_user_without_login")
+        except Exception as e:
+            print(f"FAIL test_FAIL_register_user_without_login: {e}")
+
+    def test_FAIL_register_user_without_password(self):
+        try:
+            resp = requests.post("http://localhost/backend/users/new", {
+                "login": "admin",
+                #! "password": "123456"
+            })
+            if resp.status_code != 400:
+                raise Exception(f"Статус не равен 400: {resp.status_code} - {resp.json()}")
+            print(f"OK test_FAIL_register_user_without_password")
+        except Exception as e:
+            print(f"FAIL test_FAIL_register_user_without_password: {e}")
 
 def launch():
     print("\n--- User Controller ---\n")
     TestUserProfile().launch()
     TestUserLogin().launch()
+    TestUserRegister().launch()

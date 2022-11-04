@@ -8,6 +8,7 @@ import (
 type IUserRepo interface {
 	GetUserById(idUser int64) (models.User, error)
 	GetUserByLogin(login string) (models.User, error)
+	InsertUser(login, password string) (int64, error)
 }
 
 func NewUserRepo(db *sqlx.DB) IUserRepo {
@@ -50,4 +51,16 @@ func (c *userRepo) GetUserByLogin(login string) (models.User, error) {
 	)
 
 	return user, err
+}
+
+func (c *userRepo) InsertUser(login, password string) (int64, error) {
+	var idUser int64
+	err := c.db.Get(&idUser,
+		`
+			INSERT INTO public.users (login, password, id_role) VALUES
+			($1, $2, 2)
+			RETURNING id;
+		`,
+		login, password)
+	return idUser, err
 }

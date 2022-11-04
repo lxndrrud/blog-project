@@ -14,6 +14,7 @@ import (
 type IUserController interface {
 	GetUserAndPosts(ctx *gin.Context)
 	LoginUser(ctx *gin.Context)
+	RegisterUser(ctx *gin.Context)
 }
 
 func NewUserController(db *sqlx.DB, redisConn *redis.Client) IUserController {
@@ -26,6 +27,7 @@ type userController struct {
 	userService interface {
 		GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
 		LoginUser(login, password string) (string, models.IError)
+		RegisterUser(login, password string) models.IError
 	}
 }
 
@@ -77,4 +79,27 @@ func (c userController) LoginUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, map[string]any{
 		"token": token,
 	})
+}
+
+func (c userController) RegisterUser(ctx *gin.Context) {
+	if ctx.PostForm("login") == "" {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Не указан логин!",
+		})
+		return
+	}
+	if ctx.PostForm("password") == "" {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Не указан пароль!",
+		})
+		return
+	}
+	err := c.userService.RegisterUser(ctx.PostForm("login"), ctx.PostForm("password"))
+	if err.GetCode() != 0 {
+		ctx.JSON(err.GetCode(), map[string]any{
+			"message": err.GetMessage(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusCreated, nil)
 }
