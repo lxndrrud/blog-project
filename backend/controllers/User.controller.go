@@ -70,7 +70,7 @@ func (c userController) LoginUser(ctx *gin.Context) {
 		return
 	}
 	token, err := c.userService.LoginUser(ctx.PostForm("login"), ctx.PostForm("password"))
-	if err.GetCode() != 0 {
+	if err != nil {
 		ctx.JSON(err.GetCode(), map[string]any{
 			"message": err.GetMessage(),
 		})
@@ -95,7 +95,7 @@ func (c userController) RegisterUser(ctx *gin.Context) {
 		return
 	}
 	err := c.userService.RegisterUser(ctx.PostForm("login"), ctx.PostForm("password"))
-	if err.GetCode() != 0 {
+	if err != nil {
 		ctx.JSON(err.GetCode(), map[string]any{
 			"message": err.GetMessage(),
 		})

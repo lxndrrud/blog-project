@@ -10,5 +10,9 @@ import (
 func setupPostRouter(router *gin.RouterGroup, db *sqlx.DB, redisConn *redis.Client) {
 	controller := controllers.NewPostController(db, redisConn)
 	router.GET("/actual", controller.GetApprovedPosts)
+	router.GET("/needToApprove", controller.GetPostsNeedToApprove)
+	router.GET("/get", controller.GetApprovedPost)
 	router.POST("/new", controller.CreatePost)
+	router.POST("/approve", controller.ApprovePost)
+	router.POST("/reject", controller.RejectPost)
 }

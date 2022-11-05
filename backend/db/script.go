@@ -47,10 +47,11 @@ func runTestSeeds() {
 				('Администратор'), ('Блогер');
 
 			INSERT INTO "public"."permissions" (title, code) VALUES 
-				('Создавать посты', 'СОЗД_ПОСТЫ');
+				('Создавать посты', 'СОЗД_ПОСТЫ'), 
+				('Модерировать посты', 'МОДЕР_ПОСТЫ');
 
 			INSERT INTO "public"."roles_permissions" (id_role, id_permission) VALUES 
-				(1, 1), (2, 1);
+				(1, 1), (1, 2), (2, 1);
 
 			INSERT INTO "public"."users" (login, password, id_role) VALUES 
 				('admin', '$2a$10$sE/CMuBOJ4UP8oqRNYtCu.EvDKcsX.C853Nx2sRTgONzdKMGyAUOu', 1),

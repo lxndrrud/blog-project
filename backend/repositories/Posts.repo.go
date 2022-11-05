@@ -7,8 +7,13 @@ import (
 
 type IPostsRepo interface {
 	GetUserPosts(idUser int64) ([]models.Post, error)
+	GetPostsNeedToApprove() ([]models.Post, error)
 	GetApprovedPosts() ([]models.Post, error)
+	GetApprovedPost(idPost int64) (models.Post, error)
 	InsertPost(post models.Post) error
+	AddViews(idPost int64, viewsQuantity int64) error
+	ApprovePost(idPost int64) error
+	RejectPost(idPost int64) error
 }
 
 func NewPostsRepo(db *sqlx.DB) IPostsRepo {
@@ -44,6 +49,29 @@ func (c *postsRepo) GetApprovedPosts() ([]models.Post, error) {
 		`)
 
 	return posts, err
+}
+
+func (c *postsRepo) GetApprovedPost(idPost int64) (models.Post, error) {
+	var post models.Post
+	err := c.db.Get(
+		&post,
+		`
+			SELECT
+				p.id as post_id, 
+				p.title as post_title, p.text as post_text, p.annotation as post_annotation,
+				p.views as post_views, 
+				p.approved as post_approved, 
+				p.rejected as post_rejected, 
+				p.time_start as post_time_start, p.time_end as post_time_end,
+				p.id_author as post_id_author, u.login as post_author_login
+			FROM "public"."posts" p
+			INNER JOIN public.users AS u ON u.id = p.id_author
+			WHERE p.approved = TRUE AND p.id = $1
+				AND (p.time_start IS NULL OR p.time_start <= NOW())
+				AND (p.time_end IS NULL OR p.time_end > NOW()) 
+		`,
+		idPost)
+	return post, err
 }
 
 func (c *postsRepo) GetPostsNeedToApprove() ([]models.Post, error) {
@@ -96,7 +124,7 @@ func (c *postsRepo) GetUserPosts(idUser int64) ([]models.Post, error) {
 	return posts, err
 }
 
-func (c postsRepo) InsertPost(post models.Post) error {
+func (c *postsRepo) InsertPost(post models.Post) error {
 	_, err := c.db.Exec(
 		`
 		INSERT INTO "public"."posts"(title, annotation, text, id_author, time_start, time_end) 
@@ -109,5 +137,39 @@ func (c postsRepo) InsertPost(post models.Post) error {
 		post.IdAuthor,
 		post.TimeStart,
 		post.TimeEnd)
+	return err
+}
+
+func (c *postsRepo) AddViews(idPost int64, viewsQuantity int64) error {
+	_, err := c.db.Exec(
+		`
+			UPDATE "public"."posts"
+			SET views = views + $2
+			WHERE id = $1
+		`,
+		idPost,
+		viewsQuantity)
+	return err
+}
+
+func (c *postsRepo) ApprovePost(idPost int64) error {
+	_, err := c.db.Exec(
+		`
+			UPDATE public.posts
+			SET approved = TRUE
+			WHERE id = $1 AND rejected = FALSE
+		`,
+		idPost)
+	return err
+}
+
+func (c *postsRepo) RejectPost(idPost int64) error {
+	_, err := c.db.Exec(
+		`
+			UPDATE public.posts
+			SET rejected = TRUE
+			WHERE id = $1 AND approved = FALSE
+		`,
+		idPost)
 	return err
 }

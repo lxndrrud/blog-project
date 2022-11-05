@@ -22,7 +22,6 @@ func NewUserService(db *sqlx.DB, redisConn *redis.Client) IUserService {
 		userRepo:        repositories.NewUserRepo(db),
 		postsRepo:       repositories.NewPostsRepo(db),
 		userSessionRepo: repositories.NewUserSessionRepo(redisConn),
-		permissionsRepo: repositories.NewPermissionsRepo(db),
 		generator:       utils.NewGenerator(),
 	}
 }
@@ -39,9 +38,6 @@ type userService struct {
 	userSessionRepo interface {
 		CreateSession(idUser int64, password string) (models.UserSession, error)
 		GetUserSession(token string) (models.UserSession, error)
-	}
-	permissionsRepo interface {
-		GetPermissionsList(idUser int64) ([]models.Permission, error)
 	}
 	generator interface {
 		CheckPassword(hashedPassword, password string) error
@@ -108,7 +104,7 @@ func (c userService) LoginUser(login, password string) (string, models.IError) {
 	if err != nil {
 		return "", models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
 	}
-	return session.Token, models.NewError(0, "")
+	return session.Token, nil
 }
 
 func (c userService) RegisterUser(login, password string) models.IError {
@@ -124,5 +120,5 @@ func (c userService) RegisterUser(login, password string) models.IError {
 		return models.NewError(http.StatusInternalServerError,
 			"Непредвиденная ошибка: "+err.Error())
 	}
-	return models.NewError(0, "")
+	return nil
 }

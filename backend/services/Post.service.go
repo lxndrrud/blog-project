@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
+	"github.com/lxndrrud/blog-project/infrastructure"
 	"github.com/lxndrrud/blog-project/models"
 	"github.com/lxndrrud/blog-project/repositories"
 	"github.com/lxndrrud/blog-project/utils"
@@ -14,15 +15,19 @@ import (
 
 type IPostService interface {
 	GetApprovedPosts() ([]models.Post, models.IError)
+	GetApprovedPost(idPost int64) (models.Post, models.IError)
+	GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
 	CreatePost(title, text, annotation, token string,
 		timeStart *time.Time, timeEnd *time.Time) models.IError
+	ApprovePost(token string, idPost int64) models.IError
+	RejectPost(token string, idPost int64) models.IError
 }
 
 func NewPostService(db *sqlx.DB, redisConn *redis.Client) IPostService {
 	return &postService{
 		postRepo:          repositories.NewPostsRepo(db),
-		userSessionRepo:   repositories.NewUserSessionRepo(redisConn),
-		permissionRepo:    repositories.NewPermissionsRepo(db),
+		userRepo:          repositories.NewUserRepo(db),
+		permissionInfra:   infrastructure.NewPermissionInfra(db, redisConn),
 		permissionChecker: utils.NewPermissionChecker(),
 	}
 }
@@ -30,13 +35,19 @@ func NewPostService(db *sqlx.DB, redisConn *redis.Client) IPostService {
 type postService struct {
 	postRepo interface {
 		GetApprovedPosts() ([]models.Post, error)
+		GetApprovedPost(idPost int64) (models.Post, error)
+		GetPostsNeedToApprove() ([]models.Post, error)
 		InsertPost(post models.Post) error
+		AddViews(idPost int64, viewsQuantity int64) error
+		ApprovePost(idPost int64) error
+		RejectPost(idPost int64) error
 	}
-	userSessionRepo interface {
-		GetUserSession(token string) (models.UserSession, error)
+	userRepo interface {
+		GetUserById(idUser int64) (models.User, error)
 	}
-	permissionRepo interface {
-		GetPermissionsList(idUser int64) ([]models.Permission, error)
+	permissionInfra interface {
+		GetPermissionsList(token string) ([]models.Permission, models.IError)
+		GetUserIdByToken(token string) (int64, models.IError)
 	}
 	permissionChecker utils.IPermissionChecker
 }
@@ -49,20 +60,53 @@ func (c postService) GetApprovedPosts() ([]models.Post, models.IError) {
 	return posts, nil
 }
 
+func (c postService) GetApprovedPost(idPost int64) (models.Post, models.IError) {
+	// Получить пост
+	post, err := c.postRepo.GetApprovedPost(idPost)
+	if err == sql.ErrNoRows {
+		return models.Post{}, models.NewError(http.StatusNotFound, "Пост не найден!")
+	}
+	if err != nil {
+		return models.Post{}, models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	// Обновить количество просмотров
+	err = c.postRepo.AddViews(post.Id, 1)
+	if err != nil {
+		return models.Post{}, models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	post.Views += 1
+	return post, nil
+}
+
+func (c postService) GetPostsNeedToApprove(token string) ([]models.Post, models.IError) {
+	permissions, errService := c.permissionInfra.GetPermissionsList(token)
+	if errService != nil {
+		return []models.Post{}, errService
+	}
+	if !c.permissionChecker.CanModeratePosts(permissions) {
+		return []models.Post{}, models.NewError(http.StatusForbidden,
+			"Вам запрещено модерировать посты!")
+	}
+	posts, err := c.postRepo.GetPostsNeedToApprove()
+	if err != nil {
+		return []models.Post{}, models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	return posts, nil
+}
+
 func (c postService) CreatePost(title, text, annotation, token string,
 	timeStart *time.Time, timeEnd *time.Time) models.IError {
-	// Получить сессию по токену
-	userSession, err := c.userSessionRepo.GetUserSession(token)
-	if err == redis.Nil {
-		return models.NewError(http.StatusNotFound, "Сеанс не найден. Пожалуйста, войдите по новой.")
-	}
-	if err != nil {
-		return models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
+	idUser, errService := c.permissionInfra.GetUserIdByToken(token)
+	if errService != nil {
+		return errService
 	}
 	// Получить разрешения пользователя по информации с токена
-	permissions, err := c.permissionRepo.GetPermissionsList(userSession.IdUser)
-	if err != nil {
-		return models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
+	permissions, errService := c.permissionInfra.GetPermissionsList(token)
+	if errService != nil {
+		return errService
 	}
 	// Проверить разрешение на создание постов
 	if !c.permissionChecker.CanCreatePosts(permissions) {
@@ -89,11 +133,44 @@ func (c postService) CreatePost(title, text, annotation, token string,
 		Text:       text,
 		TimeStart:  dbTimeStart,
 		TimeEnd:    dbTimeEnd,
-		IdAuthor:   userSession.IdUser,
+		IdAuthor:   idUser,
 	}
-	err = c.postRepo.InsertPost(post)
+	err := c.postRepo.InsertPost(post)
 	if err != nil {
-		return models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
+		return models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	return nil
+}
+
+func (c postService) ApprovePost(token string, idPost int64) models.IError {
+	permissions, errService := c.permissionInfra.GetPermissionsList(token)
+	if errService != nil {
+		return errService
+	}
+	if !c.permissionChecker.CanModeratePosts(permissions) {
+		return models.NewError(http.StatusForbidden, "Вам запрещено модерировать посты!")
+	}
+	err := c.postRepo.ApprovePost(idPost)
+	if err != nil {
+		return models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	return nil
+}
+
+func (c postService) RejectPost(token string, idPost int64) models.IError {
+	permissions, errService := c.permissionInfra.GetPermissionsList(token)
+	if errService != nil {
+		return errService
+	}
+	if !c.permissionChecker.CanModeratePosts(permissions) {
+		return models.NewError(http.StatusForbidden, "Вам запрещено модерировать посты!")
+	}
+	err := c.postRepo.RejectPost(idPost)
+	if err != nil {
+		return models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
 	}
 	return nil
 }
