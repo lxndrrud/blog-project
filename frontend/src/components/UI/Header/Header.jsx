@@ -15,12 +15,13 @@ function Header() {
         e.preventDefault()
 
         dispatch(usersReducer.actions.logout())
-        .then(navigate("/"))
+        navigate("/")
     }
 
     return (
-        <div className='flex justify-start bg-[lightgreen]'>
-            <div className='flex justify-between'>
+        <div className='pl-5 flex justify-start bg-[#e63946] text-[white]'>
+            <div className='flex justify-between items-center'>
+                <span className='p-1 mr-2 text-[30px]'>The Блог</span>
                 <HeaderLink destination={'/'} text={'Посты'} />
                 {
                     loginCheck(store)

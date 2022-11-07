@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 function HeaderLink({destination, text }) {
     return (
-       <Link to={destination} className="mr-3 p-1 rounded-lg bg-[blue]">{text}</Link>
+       <Link to={destination} className="mr-3 p-1 rounded-lg">{text}</Link>
     )
 }
 
