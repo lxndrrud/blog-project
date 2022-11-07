@@ -13,7 +13,7 @@ import (
 
 type IUserService interface {
 	GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
-	LoginUser(login, password string) (string, models.IError)
+	LoginUser(login, password string) (string, models.User, models.IError)
 	RegisterUser(login, password string) models.IError
 }
 
@@ -86,25 +86,25 @@ func (c userService) GetUserAndPosts(idUser int64) (models.User, []models.Post, 
 	return user, posts, nil
 }
 
-func (c userService) LoginUser(login, password string) (string, models.IError) {
+func (c userService) LoginUser(login, password string) (string, models.User, models.IError) {
 	user, err := c.userRepo.GetUserByLogin(login)
 	if err == sql.ErrNoRows {
-		return "", models.NewError(http.StatusNotFound, "Пользователь с такими данными для входа не найден!")
+		return "", models.User{}, models.NewError(http.StatusNotFound, "Пользователь с такими данными для входа не найден!")
 	}
 	if err != nil {
-		return "", models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
+		return "", models.User{}, models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
 	}
 
 	err = c.generator.CheckPassword(user.Password, password)
 	if err != nil {
-		return "", models.NewError(http.StatusNotFound, "Пользователь с такими данными для входа не найден!")
+		return "", models.User{}, models.NewError(http.StatusNotFound, "Пользователь с такими данными для входа не найден!")
 	}
 
 	session, err := c.userSessionRepo.CreateSession(user.Id, user.Password)
 	if err != nil {
-		return "", models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
+		return "", models.User{}, models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
 	}
-	return session.Token, nil
+	return session.Token, user, nil
 }
 
 func (c userService) RegisterUser(login, password string) models.IError {

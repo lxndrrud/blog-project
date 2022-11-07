@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -54,34 +55,49 @@ func (c postController) GetApprovedPosts(ctx *gin.Context) {
 }
 
 func (c postController) CreatePost(ctx *gin.Context) {
-	if ctx.PostForm("title") == "" {
-		ctx.JSON(http.StatusBadRequest, map[string]any{
-			"message": "Не указан заголовок поста",
-		})
-		return
-	}
-	if ctx.PostForm("text") == "" {
-		ctx.JSON(http.StatusBadRequest, map[string]any{
-			"message": "Не указан заголовок поста",
-		})
-		return
-	}
-	if ctx.PostForm("annotation") == "" {
-		ctx.JSON(http.StatusBadRequest, map[string]any{
-			"message": "Не указан аннотация поста",
-		})
-		return
-	}
 	if ctx.GetHeader("auth-token") == "" {
 		ctx.JSON(http.StatusForbidden, map[string]any{
 			"message": "Создание постов разрешено только авторизованным пользователям!",
 		})
 		return
 	}
+	var form struct {
+		Title      string `json:"title"`
+		Text       string `json:"text"`
+		Annotation string `json:"annotation"`
+		TimeStart  string `json:"timeStart"`
+		TimeEnd    string `json:"timeEnd"`
+	}
+	err := json.NewDecoder(ctx.Request.Body).Decode(&form)
+	if err != nil {
+		ctx.JSON(http.StatusOK, map[string]any{
+			"message": err.Error(),
+		})
+		return
+	}
+	ctx.Request.Body.Close()
+	if form.Title == "" {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Не указан заголовок поста",
+		})
+		return
+	}
+	if form.Text == "" {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Не указан заголовок поста",
+		})
+		return
+	}
+	if form.Annotation == "" {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Не указан аннотация поста",
+		})
+		return
+	}
 
 	var timeStart *time.Time = nil
-	if ctx.PostForm("timeStart") != "" {
-		parsed, err := time.Parse("2006-01-02 15:04:05", ctx.PostForm("timeStart"))
+	if form.TimeStart != "" {
+		parsed, err := time.Parse("2006-01-02 15:04:05", form.TimeStart)
 		if err != nil {
 			fmt.Println(err)
 			ctx.JSON(http.StatusBadRequest, map[string]any{
@@ -94,8 +110,8 @@ func (c postController) CreatePost(ctx *gin.Context) {
 		}
 	}
 	var timeEnd *time.Time = nil
-	if ctx.PostForm("timeEnd") != "" {
-		parsed, err := time.Parse("2006-01-02 15:04:05", ctx.PostForm("timeEnd"))
+	if form.TimeEnd != "" {
+		parsed, err := time.Parse("2006-01-02 15:04:05", form.TimeEnd)
 		if err != nil {
 			fmt.Println(err)
 			ctx.JSON(http.StatusBadRequest, map[string]any{
@@ -108,8 +124,8 @@ func (c postController) CreatePost(ctx *gin.Context) {
 		}
 	}
 
-	errService := c.postService.CreatePost(ctx.PostForm("title"), ctx.PostForm("text"),
-		ctx.PostForm("annotation"),
+	errService := c.postService.CreatePost(form.Title, form.Text,
+		form.Annotation,
 		ctx.GetHeader("auth-token"), timeStart, timeEnd)
 	if errService != nil {
 		ctx.JSON(errService.GetCode(), map[string]any{

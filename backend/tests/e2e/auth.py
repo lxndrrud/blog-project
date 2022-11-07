@@ -4,7 +4,7 @@ from typing import Optional
 class Auth:
     def getAdminToken(self) -> Optional[str]:
         try:
-            resp = requests.post("http://localhost/backend/users/login", {
+            resp = requests.post("http://localhost/backend/users/login", json={
                 "login": "admin",
                 "password": "123456"
             })
@@ -20,7 +20,7 @@ class Auth:
 
     def getBlogerToken(self) -> Optional[str]:
         try:
-            resp = requests.post("http://localhost/backend/users/login", {
+            resp = requests.post("http://localhost/backend/users/login", json={
                 "login": "bloger",
                 "password": "123456"
             })

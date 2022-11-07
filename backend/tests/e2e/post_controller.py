@@ -37,7 +37,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
@@ -56,7 +56,7 @@ class TestCreatePost:
             token = auth.Auth().getBlogerToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
@@ -75,7 +75,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
@@ -92,7 +92,7 @@ class TestCreatePost:
     def test_FAIL_unexisting_token(self):
         try:
             token = "wrong_unexisting_token!"
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
@@ -110,7 +110,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception('Токен не получен!')
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 #! "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
@@ -128,7 +128,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception('Токен не получен!')
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 "title": "test title",
                 "annotation": "test annotation",
                 #! "text": "test text",
@@ -146,7 +146,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception('Токен не получен!')
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 "title": "test title",
                 #! "annotation": "test annotation",
                 "text": "test text",
@@ -164,7 +164,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", {
+            resp = requests.post("http://localhost/backend/posts/new", json={
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",

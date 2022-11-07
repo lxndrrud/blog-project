@@ -38,7 +38,7 @@ class TestUserLogin:
         
     def test_OK_login_user(self):
         try:
-            resp = requests.post("http://localhost/backend/users/login", {
+            resp = requests.post("http://localhost/backend/users/login", json={
                 "login": "admin",
                 "password": "123456"
             })
@@ -47,13 +47,15 @@ class TestUserLogin:
             json_ = resp.json()
             if not "token" in json_:
                 raise Exception(f"В теле ответа нет токена!")
+            if not "currentUser" in json_:
+                raise Exception(f"В теле ответа нет информации о текущем пользователе!")
             print(f"OK test_OK_login_user")
         except Exception as e:
             print(f"FAIL test_OK_login_user: {e}")
 
     def test_NOT_FOUND_login_user_wrong_login(self):
         try:
-            resp = requests.post("http://localhost/backend/users/login", {
+            resp = requests.post("http://localhost/backend/users/login", json={
                 "login": "wrong!",
                 "password": "123456"
             })
@@ -68,7 +70,7 @@ class TestUserLogin:
 
     def test_NOT_FOUND_login_user_wrong_password(self):
         try:
-            resp = requests.post("http://localhost/backend/users/login", {
+            resp = requests.post("http://localhost/backend/users/login", json={
                 "login": "admin",
                 "password": "123456!"
             })
@@ -81,7 +83,6 @@ class TestUserLogin:
         except Exception as e:
             print(f"FAIL test_NOT_FOUND_login_user_wrong_password: {e}")
 
-    
 class TestUserRegister:
     def launch(self):
         print("# Test User Register")
@@ -92,7 +93,7 @@ class TestUserRegister:
     
     def test_OK_register_user(self):
         try:
-            resp = requests.post("http://localhost/backend/users/new", {
+            resp = requests.post("http://localhost/backend/users/new", json={
                 "login": "test_bloger",
                 "password": "123456"
             })
@@ -104,7 +105,7 @@ class TestUserRegister:
 
     def test_FAIL_register_user_existing_user(self):
         try:
-            resp = requests.post("http://localhost/backend/users/new", {
+            resp = requests.post("http://localhost/backend/users/new", json={
                 "login": "admin",
                 "password": "123456"
             })
@@ -116,7 +117,7 @@ class TestUserRegister:
 
     def test_FAIL_register_user_without_login(self):
         try:
-            resp = requests.post("http://localhost/backend/users/new", {
+            resp = requests.post("http://localhost/backend/users/new", json={
                 #! "login": "admin",
                 "password": "123456"
             })
@@ -128,7 +129,7 @@ class TestUserRegister:
 
     def test_FAIL_register_user_without_password(self):
         try:
-            resp = requests.post("http://localhost/backend/users/new", {
+            resp = requests.post("http://localhost/backend/users/new", json={
                 "login": "admin",
                 #! "password": "123456"
             })

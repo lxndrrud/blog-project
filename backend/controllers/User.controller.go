@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -26,7 +27,7 @@ func NewUserController(db *sqlx.DB, redisConn *redis.Client) IUserController {
 type userController struct {
 	userService interface {
 		GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
-		LoginUser(login, password string) (string, models.IError)
+		LoginUser(login, password string) (string, models.User, models.IError)
 		RegisterUser(login, password string) models.IError
 	}
 }
@@ -57,47 +58,72 @@ func (c userController) GetUserAndPosts(ctx *gin.Context) {
 }
 
 func (c userController) LoginUser(ctx *gin.Context) {
-	if ctx.PostForm("login") == "" {
+	var form struct {
+		Login    string `json:"login"`
+		Password string `json:"password"`
+	}
+	err := json.NewDecoder(ctx.Request.Body).Decode(&form)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Неверное тело запроса!",
+		})
+		return
+	}
+	ctx.Request.Body.Close()
+	if form.Login == "" {
 		ctx.JSON(http.StatusBadRequest, map[string]any{
 			"message": "Не указан логин!",
 		})
 		return
 	}
-	if ctx.PostForm("password") == "" {
+	if form.Password == "" {
 		ctx.JSON(http.StatusBadRequest, map[string]any{
 			"message": "Не указан пароль!",
 		})
 		return
 	}
-	token, err := c.userService.LoginUser(ctx.PostForm("login"), ctx.PostForm("password"))
-	if err != nil {
-		ctx.JSON(err.GetCode(), map[string]any{
-			"message": err.GetMessage(),
+	token, user, errService := c.userService.LoginUser(form.Login, form.Password)
+	if errService != nil {
+		ctx.JSON(errService.GetCode(), map[string]any{
+			"message": errService.GetMessage(),
 		})
 		return
 	}
 	ctx.JSON(http.StatusOK, map[string]any{
-		"token": token,
+		"token":       token,
+		"currentUser": user,
 	})
 }
 
 func (c userController) RegisterUser(ctx *gin.Context) {
-	if ctx.PostForm("login") == "" {
+	var form struct {
+		Login    string `json:"login"`
+		Password string `json:"password"`
+	}
+	err := json.NewDecoder(ctx.Request.Body).Decode(&form)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Неверное тело запроса!",
+		})
+		return
+	}
+	ctx.Request.Body.Close()
+	if form.Login == "" {
 		ctx.JSON(http.StatusBadRequest, map[string]any{
 			"message": "Не указан логин!",
 		})
 		return
 	}
-	if ctx.PostForm("password") == "" {
+	if form.Password == "" {
 		ctx.JSON(http.StatusBadRequest, map[string]any{
 			"message": "Не указан пароль!",
 		})
 		return
 	}
-	err := c.userService.RegisterUser(ctx.PostForm("login"), ctx.PostForm("password"))
-	if err != nil {
-		ctx.JSON(err.GetCode(), map[string]any{
-			"message": err.GetMessage(),
+	errService := c.userService.RegisterUser(form.Login, form.Password)
+	if errService != nil {
+		ctx.JSON(errService.GetCode(), map[string]any{
+			"message": errService.GetMessage(),
 		})
 		return
 	}
