@@ -5,7 +5,6 @@ export const loginRequest = createAsyncThunk(
     "users/login",
     async ({ login, password }, thunkApi) => {
         try {
-            console.log("action", login, password)
             const response = await axios.post("/backend/users/login", { login, password })
             return response.data
         } catch (error) {

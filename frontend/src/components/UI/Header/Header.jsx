@@ -5,6 +5,7 @@ import {loginCheck} from '../../../utils/LoginCheck'
 import CustomButton from '../CustomButton/CustomButton'
 import { usersReducer } from '../../../store/reducers/users'
 import { useNavigate } from 'react-router'
+import { permissionCheck } from '../../../utils/PermissionCheck'
 
 function Header() {
     const dispatch = useDispatch()
@@ -26,9 +27,24 @@ function Header() {
                 {
                     loginCheck(store)
                     ?
-                        [
-                            <CustomButton text={"Выйти"} callback={logout}  />
-                        ]
+                        permissionCheck(store, 'СОЗД_ПОСТЫ')
+                        ?
+                            permissionCheck(store, 'МОДЕР_ПОСТЫ')
+                            ?
+                                [
+                                    <HeaderLink destination={'/newPost'} text={'Написать'} />,
+                                    <HeaderLink destination={'/postsToCheck'} text={'Модерировать'} />,
+                                    <CustomButton text={"Выйти"} callback={logout}  />
+                                ]
+                            :
+                                [
+                                    <HeaderLink destination={'/newPost'} text={'Написать'} />,
+                                    <CustomButton text={"Выйти"} callback={logout}  />
+                                ]
+                        :
+                            [
+                                <CustomButton text={"Выйти"} callback={logout}  />
+                            ]
                     :
                         [
                             <HeaderLink destination={'/login'} text={'Вход'} />

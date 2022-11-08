@@ -8,6 +8,7 @@ import (
 type IPostsRepo interface {
 	GetUserPosts(idUser int64) ([]models.Post, error)
 	GetPostsNeedToApprove() ([]models.Post, error)
+	GetPostNeedToApprove(idPost int64) (models.Post, error)
 	GetApprovedPosts() ([]models.Post, error)
 	GetApprovedPost(idPost int64) (models.Post, error)
 	InsertPost(post models.Post) error
@@ -35,6 +36,7 @@ func (c *postsRepo) GetApprovedPosts() ([]models.Post, error) {
 		SELECT 
 			p.id as post_id, 
 			p.title as post_title, p.text as post_text, p.annotation as post_annotation,
+			p.picture as post_picture, p.created_at as post_created_at,
 			p.views as post_views, 
 			p.approved as post_approved, 
 			p.rejected as post_rejected, 
@@ -59,6 +61,7 @@ func (c *postsRepo) GetApprovedPost(idPost int64) (models.Post, error) {
 			SELECT
 				p.id as post_id, 
 				p.title as post_title, p.text as post_text, p.annotation as post_annotation,
+				p.picture as post_picture, p.created_at as post_created_at,
 				p.views as post_views, 
 				p.approved as post_approved, 
 				p.rejected as post_rejected, 
@@ -83,6 +86,7 @@ func (c *postsRepo) GetPostsNeedToApprove() ([]models.Post, error) {
 		SELECT 
 			p.id as post_id, 
 			p.title as post_title, p.text as post_text, p.annotation as post_annotation,
+			p.picture as post_picture, p.created_at as post_created_at,
 			p.views as post_views, 
 			p.approved as post_approved, 
 			p.rejected as post_rejected, 
@@ -97,6 +101,31 @@ func (c *postsRepo) GetPostsNeedToApprove() ([]models.Post, error) {
 	return posts, err
 }
 
+func (c *postsRepo) GetPostNeedToApprove(idPost int64) (models.Post, error) {
+	var post models.Post
+
+	err := c.db.Get(
+		&post,
+		`
+		SELECT 
+			p.id as post_id, 
+			p.title as post_title, p.text as post_text, p.annotation as post_annotation,
+			p.picture as post_picture, p.created_at as post_created_at,
+			p.views as post_views, 
+			p.approved as post_approved, 
+			p.rejected as post_rejected, 
+			p.time_start as post_time_start, p.time_end as post_time_end,
+			p.id_author as post_id_author, u.login as post_author_login
+		FROM "public"."posts" p
+		INNER JOIN public.users AS u ON u.id = p.id_author
+		WHERE p.approved = FALSE AND p.rejected = FALSE AND p.id = $1
+		ORDER BY views DESC
+		`,
+		idPost)
+
+	return post, err
+}
+
 func (c *postsRepo) GetUserPosts(idUser int64) ([]models.Post, error) {
 	var posts []models.Post
 
@@ -106,6 +135,7 @@ func (c *postsRepo) GetUserPosts(idUser int64) ([]models.Post, error) {
 		SELECT 
 			p.id as post_id, 
 			p.title as post_title, p.text as post_text, p.annotation as post_annotation,
+			p.picture as post_picture, p.created_at as post_created_at,
 			p.views as post_views, 
 			p.approved as post_approved, 
 			p.rejected as post_rejected, 

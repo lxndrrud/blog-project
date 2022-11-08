@@ -5,6 +5,7 @@ const initialState = {
     token: null,
     user: null,
     currentUser: null,
+    permissions: [],
 }
 
 const pending = (state) => {
@@ -28,7 +29,6 @@ export const usersReducer = createSlice({
             state.error = initialState.error
         },
         logout: (state, action) => {
-            console.log('kek')
             state.currentUser = initialState.currentUser
             state.token = initialState.token
         }
@@ -37,6 +37,7 @@ export const usersReducer = createSlice({
         [loginRequest.fulfilled]: (state, action) => {
             state.token = action.payload.token
             state.currentUser = action.payload.currentUser
+            state.permissions = action.payload.permissions
             defaultFullfilled(state)
         },
         [loginRequest.pending]: pending,

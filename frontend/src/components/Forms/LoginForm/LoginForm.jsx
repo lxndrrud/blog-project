@@ -17,7 +17,6 @@ function LoginForm() {
     let [password, setPassword] = useState(null)
 
     const validate = () => {
-        console.log(login, password)
         if (!login) {
             Swal.fire({
                 title: "Ошибка валидации",
@@ -39,6 +38,8 @@ function LoginForm() {
 
     const sendLoginRequest = (e) => {
         e.preventDefault()
+
+        if (!validate()) return
 
         dispatch(loginRequest({ login, password }))
         .then(() => {

@@ -12,6 +12,7 @@ func setupPostRouter(router *gin.RouterGroup, db *sqlx.DB, redisConn *redis.Clie
 	router.GET("/actual", controller.GetApprovedPosts)
 	router.GET("/needToApprove", controller.GetPostsNeedToApprove)
 	router.GET("/get", controller.GetApprovedPost)
+	router.GET("/needToApprove/get", controller.GetPostNeedToApprove)
 	router.POST("/new", controller.CreatePost)
 	router.POST("/approve", controller.ApprovePost)
 	router.POST("/reject", controller.RejectPost)

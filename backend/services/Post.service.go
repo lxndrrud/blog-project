@@ -17,6 +17,7 @@ type IPostService interface {
 	GetApprovedPosts() ([]models.Post, models.IError)
 	GetApprovedPost(idPost int64) (models.Post, models.IError)
 	GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
+	GetPostNeedToApprove(token string, idPost int64) (models.Post, models.IError)
 	CreatePost(title, text, annotation, token string,
 		timeStart *time.Time, timeEnd *time.Time) models.IError
 	ApprovePost(token string, idPost int64) models.IError
@@ -37,6 +38,7 @@ type postService struct {
 		GetApprovedPosts() ([]models.Post, error)
 		GetApprovedPost(idPost int64) (models.Post, error)
 		GetPostsNeedToApprove() ([]models.Post, error)
+		GetPostNeedToApprove(idPost int64) (models.Post, error)
 		InsertPost(post models.Post) error
 		AddViews(idPost int64, viewsQuantity int64) error
 		ApprovePost(idPost int64) error
@@ -95,6 +97,26 @@ func (c postService) GetPostsNeedToApprove(token string) ([]models.Post, models.
 			"Непредвиденная ошибка: "+err.Error())
 	}
 	return posts, nil
+}
+
+func (c postService) GetPostNeedToApprove(token string, idPost int64) (models.Post, models.IError) {
+	permissions, errService := c.permissionInfra.GetPermissionsList(token)
+	if errService != nil {
+		return models.Post{}, errService
+	}
+	if !c.permissionChecker.CanModeratePosts(permissions) {
+		return models.Post{}, models.NewError(http.StatusForbidden,
+			"Вам запрещено модерировать посты!")
+	}
+	post, err := c.postRepo.GetPostNeedToApprove(idPost)
+	if err == sql.ErrNoRows {
+		return models.Post{}, models.NewError(http.StatusNotFound, "Непроверенный пост с данным идентификатором не найден!")
+	}
+	if err != nil {
+		return models.Post{}, models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	return post, nil
 }
 
 func (c postService) CreatePost(title, text, annotation, token string,

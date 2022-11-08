@@ -27,7 +27,7 @@ func NewUserController(db *sqlx.DB, redisConn *redis.Client) IUserController {
 type userController struct {
 	userService interface {
 		GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
-		LoginUser(login, password string) (string, models.User, models.IError)
+		LoginUser(login, password string) (string, models.User, []models.Permission, models.IError)
 		RegisterUser(login, password string) models.IError
 	}
 }
@@ -82,7 +82,7 @@ func (c userController) LoginUser(ctx *gin.Context) {
 		})
 		return
 	}
-	token, user, errService := c.userService.LoginUser(form.Login, form.Password)
+	token, user, permissions, errService := c.userService.LoginUser(form.Login, form.Password)
 	if errService != nil {
 		ctx.JSON(errService.GetCode(), map[string]any{
 			"message": errService.GetMessage(),
@@ -92,6 +92,7 @@ func (c userController) LoginUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, map[string]any{
 		"token":       token,
 		"currentUser": user,
+		"permissions": permissions,
 	})
 }
 

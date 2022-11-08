@@ -49,6 +49,8 @@ class TestUserLogin:
                 raise Exception(f"В теле ответа нет токена!")
             if not "currentUser" in json_:
                 raise Exception(f"В теле ответа нет информации о текущем пользователе!")
+            if not "permissions" in json_:
+                raise Exception(f"В теле ответа нет информации о разрешениях текущего пользователя!")
             print(f"OK test_OK_login_user")
         except Exception as e:
             print(f"FAIL test_OK_login_user: {e}")

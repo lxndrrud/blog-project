@@ -283,6 +283,95 @@ class TestGetPostsNeedToApprove:
         except Exception as e:
             print(f"FAIL test_FORBIDDEN_get_posts_need_to_approve_without_token: {e}")
 
+class TestGetPostNeedToApprove:
+    def launch(self):
+        print("# Test Get Post Need To Approve")
+        self.test_FORBIDDEN_bloger_get_post_need_to_approve()
+        self.test_NOT_FOUND_get_post_need_to_approve_unknown_token()
+        self.test_FORBIDDEN_get_post_need_to_approve_without_token()
+        self.test_NOT_FOUND_get_unexisting_post_need_to_approve()
+        self.test_OK_admin_get_post_need_to_approve()
+
+    def test_OK_admin_get_post_need_to_approve(self):
+        try:
+            token = auth.Auth().getAdminToken()
+            if not token:
+                raise Exception("Токен не получен!")
+            resp = requests.get("http://localhost/backend/posts/needToApprove/get?idPost=1", headers={
+                "auth-token": token
+            })
+            if resp.status_code != 200:
+                raise Exception(f"Статус не равен 200: {resp.status_code} - {resp.json()}")
+            json_ = resp.json()
+            if not json_["post"]:
+                raise Exception(f"В теле ответа нет постов: {json_}")
+            print("OK test_OK_admin_get_post_need_to_approve")
+        except Exception as e:
+            print(f"FAIL test_OK_admin_get_post_need_to_approve: {e}")
+
+    def test_FORBIDDEN_bloger_get_post_need_to_approve(self):
+        try:
+            token = auth.Auth().getBlogerToken()
+            if not token:
+                raise Exception("Токен не получен!")
+            resp = requests.get("http://localhost/backend/posts/needToApprove/get?idPost=1", headers={
+                "auth-token": token
+            })
+            if resp.status_code != 403:
+                raise Exception(f"Статус не равен 403: {resp.status_code} - {resp.json()}")
+            json_ = resp.json()
+            if not json_["message"]:
+                raise Exception(f"В теле ответа нет сообщения об ошибке: {json_}")
+            print("OK test_FORBIDDEN_bloger_get_post_need_to_approve")
+        except Exception as e:
+            print(f"FAIL test_FORBIDDEN_bloger_get_post_need_to_approve: {e}")
+
+    def test_NOT_FOUND_get_post_need_to_approve_unknown_token(self):
+        try:
+            token = "unknown_token"
+            if not token:
+                raise Exception("Токен не получен!")
+            resp = requests.get("http://localhost/backend/posts/needToApprove/get?idPost=1", headers={
+                "auth-token": token
+            })
+            if resp.status_code != 404:
+                raise Exception(f"Статус не равен 404: {resp.status_code} - {resp.json()}")
+            json_ = resp.json()
+            if not json_["message"]:
+                raise Exception(f"В теле ответа нет сообщения об ошибке: {json_}")
+            print("OK test_NOT_FOUND_get_post_need_to_approve_unknown_token")
+        except Exception as e:
+            print(f"FAIL test_NOT_FOUND_get_post_need_to_approve_unknown_token: {e}")
+
+    def test_FORBIDDEN_get_post_need_to_approve_without_token(self):
+        try:
+            resp = requests.get("http://localhost/backend/posts/needToApprove/get?idPost=1")
+            if resp.status_code != 403:
+                raise Exception(f"Статус не равен 403: {resp.status_code} - {resp.json()}")
+            json_ = resp.json()
+            if not json_["message"]:
+                raise Exception(f"В теле ответа нет сообщения об ошибке: {json_}")
+            print("OK test_FORBIDDEN_get_post_need_to_approve_without_token")
+        except Exception as e:
+            print(f"FAIL test_FORBIDDEN_get_post_need_to_approve_without_token: {e}")
+
+    def test_NOT_FOUND_get_unexisting_post_need_to_approve(self):
+        try:
+            token = auth.Auth().getAdminToken()
+            if not token:
+                raise Exception("Токен не получен!")
+            resp = requests.get("http://localhost/backend/posts/needToApprove/get?idPost=2213", headers={
+                "auth-token": token,
+            })
+            if resp.status_code != 404:
+                raise Exception(f"Статус не равен 404: {resp.status_code} - {resp.json()}")
+            json_ = resp.json()
+            if not json_["message"]:
+                raise Exception(f"В теле ответа нет сообщения об ошибке: {json_}")
+            print("OK test_NOT_FOUND_get_unexisting_post_need_to_approve")
+        except Exception as e:
+            print(f"FAIL test_NOT_FOUND_get_unexisting_post_need_to_approve: {e}")
+
 class TestApprovePost:
     def launch(self):
         print("# Test Approve Post")
@@ -296,7 +385,7 @@ class TestApprovePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/approve", {
+            resp = requests.post("http://localhost/backend/posts/approve", json={
                 "idPost": 1,
             }, headers={
                 "auth-token": token,
@@ -312,7 +401,7 @@ class TestApprovePost:
             token = auth.Auth().getBlogerToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/approve", {
+            resp = requests.post("http://localhost/backend/posts/approve", json={
                 "idPost": 1,
             }, headers={
                 "auth-token": token,
@@ -328,7 +417,7 @@ class TestApprovePost:
 
     def test_FORBIDDEN_approve_post_without_token(self):
         try:
-            resp = requests.post("http://localhost/backend/posts/approve", {
+            resp = requests.post("http://localhost/backend/posts/approve", json={
                 "idPost": 1,
             })
             if resp.status_code != 403:
@@ -343,7 +432,7 @@ class TestApprovePost:
     def test_NOT_FOUND_approve_post_with_unknown_token(self):
         try:
             token = "unknown_token"
-            resp = requests.post("http://localhost/backend/posts/approve", {
+            resp = requests.post("http://localhost/backend/posts/approve", json={
                 "idPost": 1,
             }, headers={
                 "auth-token": token,
@@ -370,7 +459,7 @@ class TestRejectPost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/reject", {
+            resp = requests.post("http://localhost/backend/posts/reject", json={
                 "idPost": 1,
             }, headers={
                 "auth-token": token,
@@ -386,7 +475,7 @@ class TestRejectPost:
             token = auth.Auth().getBlogerToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/reject", {
+            resp = requests.post("http://localhost/backend/posts/reject", json={
                 "idPost": 1,
             }, headers={
                 "auth-token": token,
@@ -402,7 +491,7 @@ class TestRejectPost:
 
     def test_FORBIDDEN_reject_post_without_token(self):
         try:
-            resp = requests.post("http://localhost/backend/posts/reject", {
+            resp = requests.post("http://localhost/backend/posts/reject", json={
                 "idPost": 1,
             })
             if resp.status_code != 403:
@@ -417,7 +506,7 @@ class TestRejectPost:
     def test_NOT_FOUND_reject_post_with_unknown_token(self):
         try:
             token = "unknown_token"
-            resp = requests.post("http://localhost/backend/posts/reject", {
+            resp = requests.post("http://localhost/backend/posts/reject", json={
                 "idPost": 1,
             }, headers={
                 "auth-token": token,
@@ -437,6 +526,7 @@ def launch():
     TestGetActualPosts().launch()
     TestGetActualPost().launch()
     TestGetPostsNeedToApprove().launch()
+    TestGetPostNeedToApprove().launch()
     TestCreatePost().launch()
     TestApprovePost().launch()
     TestRejectPost().launch()

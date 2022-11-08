@@ -13,7 +13,7 @@ import (
 
 type IUserService interface {
 	GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
-	LoginUser(login, password string) (string, models.User, models.IError)
+	LoginUser(login, password string) (string, models.User, []models.Permission, models.IError)
 	RegisterUser(login, password string) models.IError
 }
 
@@ -22,6 +22,7 @@ func NewUserService(db *sqlx.DB, redisConn *redis.Client) IUserService {
 		userRepo:        repositories.NewUserRepo(db),
 		postsRepo:       repositories.NewPostsRepo(db),
 		userSessionRepo: repositories.NewUserSessionRepo(redisConn),
+		permissionsRepo: repositories.NewPermissionsRepo(db),
 		generator:       utils.NewGenerator(),
 	}
 }
@@ -38,6 +39,9 @@ type userService struct {
 	userSessionRepo interface {
 		CreateSession(idUser int64, password string) (models.UserSession, error)
 		GetUserSession(token string) (models.UserSession, error)
+	}
+	permissionsRepo interface {
+		GetPermissionsList(idUser int64) ([]models.Permission, error)
 	}
 	generator interface {
 		CheckPassword(hashedPassword, password string) error
@@ -59,7 +63,7 @@ func (c userService) GetUserAndPosts(idUser int64) (models.User, []models.Post, 
 		} else if err != nil {
 			err1Chan <- models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
 		} else {
-			err1Chan <- models.NewError(0, "")
+			err1Chan <- nil
 		}
 	}()
 
@@ -69,7 +73,7 @@ func (c userService) GetUserAndPosts(idUser int64) (models.User, []models.Post, 
 		if err != nil {
 			err2Chan <- models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
 		} else {
-			err2Chan <- models.NewError(0, "")
+			err2Chan <- nil
 		}
 	}()
 
@@ -78,33 +82,43 @@ func (c userService) GetUserAndPosts(idUser int64) (models.User, []models.Post, 
 	err1 := <-err1Chan
 	err2 := <-err2Chan
 
-	if err1.GetCode() != 0 {
+	if err1 != nil {
 		return models.User{}, []models.Post{}, err1
-	} else if err2.GetCode() != 0 {
+	} else if err2 != nil {
 		return models.User{}, []models.Post{}, err2
 	}
 	return user, posts, nil
 }
 
-func (c userService) LoginUser(login, password string) (string, models.User, models.IError) {
+func (c userService) LoginUser(login, password string) (string, models.User, []models.Permission, models.IError) {
 	user, err := c.userRepo.GetUserByLogin(login)
 	if err == sql.ErrNoRows {
-		return "", models.User{}, models.NewError(http.StatusNotFound, "Пользователь с такими данными для входа не найден!")
+		return "", models.User{}, []models.Permission{}, models.NewError(http.StatusNotFound,
+			"Пользователь с таким логином не найден!")
 	}
 	if err != nil {
-		return "", models.User{}, models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
+		return "", models.User{}, []models.Permission{}, models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
 	}
 
 	err = c.generator.CheckPassword(user.Password, password)
 	if err != nil {
-		return "", models.User{}, models.NewError(http.StatusNotFound, "Пользователь с такими данными для входа не найден!")
+		return "", models.User{}, []models.Permission{}, models.NewError(http.StatusNotFound,
+			"Пользователь с такими данными для входа не найден!")
 	}
 
 	session, err := c.userSessionRepo.CreateSession(user.Id, user.Password)
 	if err != nil {
-		return "", models.User{}, models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
+		return "", models.User{}, []models.Permission{}, models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
 	}
-	return session.Token, user, nil
+
+	permissions, err := c.permissionsRepo.GetPermissionsList(user.Id)
+	if err != nil {
+		return "", models.User{}, []models.Permission{}, models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка: "+err.Error())
+	}
+	return session.Token, user, permissions, nil
 }
 
 func (c userService) RegisterUser(login, password string) models.IError {
