@@ -5,6 +5,12 @@ import './globals.css'
 import PermissionMiddleware from './middlewares/PermissionMiddleware'
 import CreatePostPage from './pages/CreatePostPage'
 import ApprovementPostsPage from './pages/ApprovementPostsPage'
+import ApprovePostPage from './pages/ApprovePostPage'
+import RejectPostPage from './pages/RejectPostPage'
+import LoginMiddleware from './middlewares/LoginMiddleware'
+import DeletePostPage from './pages/DeletePostPage'
+import UserPostsPage from './pages/UserPostsPage'
+import DetailApprovedPostPage from './pages/DetailApprovedPostPage'
 
 function App() {
     return (
@@ -22,6 +28,29 @@ function App() {
                         <PermissionMiddleware permission={'МОДЕР_ПОСТЫ'}>
                             <ApprovementPostsPage />
                         </PermissionMiddleware> 
+                    } />
+                    <Route path="/approve/:idPost" element={
+                        <PermissionMiddleware permission={'МОДЕР_ПОСТЫ'}>
+                            <ApprovePostPage />
+                        </PermissionMiddleware>
+                    } />
+                    <Route path="/reject/:idPost" element={
+                        <PermissionMiddleware permission={'МОДЕР_ПОСТЫ'}>
+                            <RejectPostPage />
+                        </PermissionMiddleware>
+                    } />
+                    <Route path="/deletePost/:idPost" element={
+                        <LoginMiddleware>
+                            <DeletePostPage />
+                        </LoginMiddleware>
+                    } />
+                    <Route path="/myPosts" element={
+                        <LoginMiddleware>
+                            <UserPostsPage />
+                        </LoginMiddleware>
+                    } />
+                    <Route path="/detail/:idPost" element={
+                        <DetailApprovedPostPage />
                     } />
                 </Routes>
             </BrowserRouter>

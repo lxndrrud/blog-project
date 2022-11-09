@@ -33,16 +33,19 @@ function Header() {
                             ?
                                 [
                                     <HeaderLink destination={'/newPost'} text={'Написать'} />,
+                                    <HeaderLink destination={'/myPosts'} text={'Мои посты'} />,
                                     <HeaderLink destination={'/postsToCheck'} text={'Модерировать'} />,
                                     <CustomButton text={"Выйти"} callback={logout}  />
                                 ]
                             :
                                 [
                                     <HeaderLink destination={'/newPost'} text={'Написать'} />,
+                                    <HeaderLink destination={'/myPosts'} text={'Мои посты'} />,
                                     <CustomButton text={"Выйти"} callback={logout}  />
                                 ]
                         :
                             [
+                                <HeaderLink destination={'/myPosts'} text={'Мои посты'} />,
                                 <CustomButton text={"Выйти"} callback={logout}  />
                             ]
                     :

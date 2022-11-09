@@ -1,33 +1,35 @@
 import React from 'react'
-import CustomButton from '../../UI/CustomButton/CustomButton'
 import moment from 'moment'
 import 'moment/locale/ru'
+import CustomLink from '../../UI/CustomLink/CustomLink'
+import { useSelector } from 'react-redux'
+import PostPictureImage from '../../UI/PostPictureImage/PostPictureImage'
 
 function CheckPostItem({ post }) {
-    const approvePost = (e) => {
-        e.preventDefault()
-
-    }
-
-    const rejectPost = (e) => {
-        e.preventDefault()
-        
-    }
+    const currentUser = useSelector(state => state.users.currentUser)
     return (
         <div className='mb-3 w-full p-2 flex flex-col
         rounded-md border border-solid border-[black]'>
             <h3 className='text-[28px] font-bold self-center'>{post.title}</h3>
-            <h4 className='font-bold self-center'>Автор: {post.author_login} Время создания: {moment(post.created_at).format('DD.MM.YYYY hh:mm').toString()}</h4>
-            <div className='w-full h-[200px] self-center'>Тут будет картинка</div>
+            <h4 className='font-bold self-center'>Автор: {post.author_login}</h4>
+            <PostPictureImage destination={`/detail/${post.id}`} altDescription={post.title} filepath={post.picture.String} />
             <h4 className='font-bold self-center'>Аннотация</h4>
             <p>{post.annotation}</p>
             <h4 className='font-bold self-center'>Содержимое</h4>
             <p>{post.text}</p>
-            { post.time_start.Valid && <h4>Время начала доступности: {moment(post.time_start.Time).format('DD.MM.YYYY hh:mm').toString()}</h4> }
-            { post.time_end.Valid && <h4>Время конца доступности: {moment(post.time_end.Time).format('DD.MM.YYYY hh:mm').toString()}</h4> }
+            <div className='flex flex-col mt-2 text-[14px]'>
+                <h4>Время создания: { moment(post.created_at).format('DD.MM.YYYY hh:mm').toString()} </h4>
+                { post.time_start.Valid && <h4>Время начала доступности: {moment(post.time_start.Time).format('DD.MM.YYYY hh:mm').toString()}</h4> }
+                { post.time_end.Valid && <h4>Время конца доступности: {moment(post.time_end.Time).format('DD.MM.YYYY hh:mm').toString()}</h4> }
+            </div>
             <div className='flex mt-2 self-center'>
-                <span className='mr-2'><CustomButton text={'Одобрить'} callback={approvePost} /></span>
-                <CustomButton text={'Отклонить'} callback={rejectPost} />
+                <span className='mr-2'><CustomLink text={'Одобрить'} destination={`/approve/${post.id}`} /></span>
+                <span className='mr-2'><CustomLink text={'Отклонить'} destination={`/reject/${post.id}`} /></span>
+                { 
+                    currentUser && currentUser.id === post.id_author
+                    &&
+                    <span><CustomLink text={'Удалить'} destination={`/deletePost/${post.id}`} /></span> 
+                }
             </div>
         </div>
     )

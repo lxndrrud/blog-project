@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { approvePostRequest, createPostRequest, fetchApprovedPosts, fetchPostNeedToApprove, fetchPostsNeedToApprove } from "../actions/posts";
+import { approvePostRequest, createPostRequest, deletePostRequest, fetchApprovedPost, fetchApprovedPosts, fetchPostNeedToApprove, fetchPostsNeedToApprove, fetchUserPosts, rejectPostRequest } from "../actions/posts";
 
 
 const initialState = {
@@ -63,5 +63,31 @@ export const postsReducer = createSlice({
         },
         [approvePostRequest.pending]: pending,
         [approvePostRequest.rejected]: rejected,
+
+        [rejectPostRequest.fulfilled]: (state, action) => {
+            defaultFullfilled(state)
+        },
+        [rejectPostRequest.pending]: pending,
+        [rejectPostRequest.rejected]: rejected,
+
+        [deletePostRequest.fulfilled]: (state, action) => {
+            defaultFullfilled(state)
+        },
+        [deletePostRequest.pending]: pending,
+        [deletePostRequest.rejected]: rejected,
+
+        [fetchUserPosts.fulfilled]: (state, action) => {
+            state.posts = action.payload.posts
+            defaultFullfilled(state)
+        },
+        [fetchUserPosts.pending]: pending,
+        [fetchUserPosts.rejected]: rejected,
+
+        [fetchApprovedPost.fulfilled]: (state, action) => {
+            state.post = action.payload.post
+            defaultFullfilled(state)
+        },
+        [fetchApprovedPost.pending]: pending,
+        [fetchApprovedPost.rejected]: rejected,
     }
 })

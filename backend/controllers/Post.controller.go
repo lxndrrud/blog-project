@@ -15,6 +15,7 @@ import (
 )
 
 type IPostController interface {
+	GetUserPosts(ctx *gin.Context)
 	GetApprovedPosts(ctx *gin.Context)
 	GetApprovedPost(ctx *gin.Context)
 	GetPostsNeedToApprove(ctx *gin.Context)
@@ -22,6 +23,7 @@ type IPostController interface {
 	CreatePost(ctx *gin.Context)
 	ApprovePost(ctx *gin.Context)
 	RejectPost(ctx *gin.Context)
+	DeletePost(ctx *gin.Context)
 }
 
 func NewPostController(db *sqlx.DB, redisConn *redis.Client) IPostController {
@@ -32,6 +34,7 @@ func NewPostController(db *sqlx.DB, redisConn *redis.Client) IPostController {
 
 type postController struct {
 	postService interface {
+		GetUserPosts(token string) ([]models.Post, models.IError)
 		GetApprovedPosts() ([]models.Post, models.IError)
 		GetApprovedPost(idPost int64) (models.Post, models.IError)
 		GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
@@ -40,7 +43,25 @@ type postController struct {
 			timeStart *time.Time, timeEnd *time.Time) models.IError
 		ApprovePost(token string, idPost int64) models.IError
 		RejectPost(token string, idPost int64) models.IError
+		DeletePost(token string, idPost int64) models.IError
 	}
+}
+
+func (c postController) GetUserPosts(ctx *gin.Context) {
+	if ctx.GetHeader("auth-token") == "" {
+		ctx.JSON(http.StatusForbidden, map[string]any{
+			"message": "Неавторизованным пользователям доступ запрещен!",
+		})
+		return
+	}
+	posts, errService := c.postService.GetUserPosts(ctx.GetHeader("auth-token"))
+	if errService != nil {
+		ctx.JSON(errService.GetCode(), errService.GetMessage())
+		return
+	}
+	ctx.JSON(http.StatusOK, map[string]any{
+		"posts": posts,
+	})
 }
 
 func (c postController) GetApprovedPosts(ctx *gin.Context) {
@@ -262,6 +283,35 @@ func (c postController) RejectPost(ctx *gin.Context) {
 	}
 	ctx.Request.Body.Close()
 	errService := c.postService.RejectPost(ctx.GetHeader("auth-token"), form.IdPost)
+	if errService != nil {
+		ctx.JSON(errService.GetCode(), map[string]any{
+			"message": errService.GetMessage(),
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, nil)
+}
+
+func (c postController) DeletePost(ctx *gin.Context) {
+	if ctx.GetHeader("auth-token") == "" {
+		ctx.JSON(http.StatusForbidden, map[string]any{
+			"message": "Неавторизованным пользователям доступ запрещен!",
+		})
+		return
+	}
+	if ctx.Query("idPost") == "" {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Идентификатор поста не указан",
+		})
+	}
+	idPost, err := strconv.ParseInt(ctx.Query("idPost"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Идентификатор поста не распознан",
+		})
+		return
+	}
+	errService := c.postService.DeletePost(ctx.GetHeader("auth-token"), idPost)
 	if errService != nil {
 		ctx.JSON(errService.GetCode(), map[string]any{
 			"message": errService.GetMessage(),

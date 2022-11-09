@@ -6,6 +6,7 @@ import (
 )
 
 type IPostsRepo interface {
+	GetPostById(idPost int64) (models.Post, error)
 	GetUserPosts(idUser int64) ([]models.Post, error)
 	GetPostsNeedToApprove() ([]models.Post, error)
 	GetPostNeedToApprove(idPost int64) (models.Post, error)
@@ -15,6 +16,7 @@ type IPostsRepo interface {
 	AddViews(idPost int64, viewsQuantity int64) error
 	ApprovePost(idPost int64) error
 	RejectPost(idPost int64) error
+	DeletePost(idPost int64) error
 }
 
 func NewPostsRepo(db *sqlx.DB) IPostsRepo {
@@ -25,6 +27,29 @@ func NewPostsRepo(db *sqlx.DB) IPostsRepo {
 
 type postsRepo struct {
 	db *sqlx.DB
+}
+
+func (c *postsRepo) GetPostById(idPost int64) (models.Post, error) {
+	var post models.Post
+
+	err := c.db.Get(
+		&post,
+		`
+		SELECT 
+			p.id as post_id, 
+			p.title as post_title, p.text as post_text, p.annotation as post_annotation,
+			p.picture as post_picture, p.created_at as post_created_at,
+			p.views as post_views, 
+			p.approved as post_approved, 
+			p.rejected as post_rejected, 
+			p.time_start as post_time_start, p.time_end as post_time_end,
+			p.id_author as post_id_author, u.login as post_author_login
+		FROM "public"."posts" p
+		INNER JOIN public.users AS u ON u.id = p.id_author
+		WHERE p.id = $1
+		`,
+		idPost)
+	return post, err
 }
 
 func (c *postsRepo) GetApprovedPosts() ([]models.Post, error) {
@@ -143,11 +168,8 @@ func (c *postsRepo) GetUserPosts(idUser int64) ([]models.Post, error) {
 			p.id_author as post_id_author, u.login as post_author_login
 		FROM "public"."posts" p
 		INNER JOIN public.users AS u ON u.id = p.id_author
-		WHERE p.approved = TRUE 
-			AND (p.time_start IS NULL OR p.time_start <= NOW())
-			AND (p.time_end IS NULL OR p.time_end > NOW()) 
-			AND u.id = $1
-		ORDER BY views DESC
+		WHERE u.id = $1
+		ORDER BY post_created_at DESC
 		`,
 		idUser)
 
@@ -199,6 +221,16 @@ func (c *postsRepo) RejectPost(idPost int64) error {
 			UPDATE public.posts
 			SET rejected = TRUE
 			WHERE id = $1 AND approved = FALSE
+		`,
+		idPost)
+	return err
+}
+
+func (c *postsRepo) DeletePost(idPost int64) error {
+	_, err := c.db.Exec(
+		`
+			DELETE FROM public.posts
+			WHERE id = $1
 		`,
 		idPost)
 	return err

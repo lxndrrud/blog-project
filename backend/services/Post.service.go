@@ -14,6 +14,7 @@ import (
 )
 
 type IPostService interface {
+	GetUserPosts(token string) ([]models.Post, models.IError)
 	GetApprovedPosts() ([]models.Post, models.IError)
 	GetApprovedPost(idPost int64) (models.Post, models.IError)
 	GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
@@ -22,6 +23,7 @@ type IPostService interface {
 		timeStart *time.Time, timeEnd *time.Time) models.IError
 	ApprovePost(token string, idPost int64) models.IError
 	RejectPost(token string, idPost int64) models.IError
+	DeletePost(token string, idPost int64) models.IError
 }
 
 func NewPostService(db *sqlx.DB, redisConn *redis.Client) IPostService {
@@ -35,6 +37,8 @@ func NewPostService(db *sqlx.DB, redisConn *redis.Client) IPostService {
 
 type postService struct {
 	postRepo interface {
+		GetPostById(idPost int64) (models.Post, error)
+		GetUserPosts(idUser int64) ([]models.Post, error)
 		GetApprovedPosts() ([]models.Post, error)
 		GetApprovedPost(idPost int64) (models.Post, error)
 		GetPostsNeedToApprove() ([]models.Post, error)
@@ -43,6 +47,7 @@ type postService struct {
 		AddViews(idPost int64, viewsQuantity int64) error
 		ApprovePost(idPost int64) error
 		RejectPost(idPost int64) error
+		DeletePost(idPost int64) error
 	}
 	userRepo interface {
 		GetUserById(idUser int64) (models.User, error)
@@ -52,6 +57,18 @@ type postService struct {
 		GetUserIdByToken(token string) (int64, models.IError)
 	}
 	permissionChecker utils.IPermissionChecker
+}
+
+func (c postService) GetUserPosts(token string) ([]models.Post, models.IError) {
+	idUser, errService := c.permissionInfra.GetUserIdByToken(token)
+	if errService != nil {
+		return []models.Post{}, errService
+	}
+	posts, err := c.postRepo.GetUserPosts(idUser)
+	if err != nil {
+		return []models.Post{}, models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка"+err.Error())
+	}
+	return posts, nil
 }
 
 func (c postService) GetApprovedPosts() ([]models.Post, models.IError) {
@@ -193,6 +210,25 @@ func (c postService) RejectPost(token string, idPost int64) models.IError {
 	if err != nil {
 		return models.NewError(http.StatusInternalServerError,
 			"Непредвиденная ошибка: "+err.Error())
+	}
+	return nil
+}
+
+func (c postService) DeletePost(token string, idPost int64) models.IError {
+	idUser, errService := c.permissionInfra.GetUserIdByToken(token)
+	if errService != nil {
+		return errService
+	}
+	post, err := c.postRepo.GetPostById(idPost)
+	if err != nil {
+		return models.NewError(http.StatusNotFound, "Пост не найден!")
+	}
+	if post.IdAuthor != idUser {
+		return models.NewError(http.StatusForbidden, "Вы не являетесь автором поста!")
+	}
+	err = c.postRepo.DeletePost(idPost)
+	if err != nil {
+		return models.NewError(http.StatusInternalServerError, "Непредвиденная ошибка: "+err.Error())
 	}
 	return nil
 }

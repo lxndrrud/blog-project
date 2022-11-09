@@ -1,6 +1,56 @@
 import requests
 import auth
 
+class TestGetUserPosts:
+    def launch(self):
+        print('# Test Get User Posts')
+        self.test_FORBIDDEN_getting_user_posts_without_token()
+        self.test_OK_admin_gets_own_posts()
+        self.test_OK_bloger_gets_own_posts()
+
+    def test_OK_admin_gets_own_posts(self):
+        try:
+            token = auth.Auth().getAdminToken()
+            if not token:
+                raise Exception('Токен не получен!')
+            resp = requests.get("http://localhost/backend/posts/userPosts", headers={
+                'auth-token': token,
+            })
+            if resp.status_code != 200:
+                raise Exception(f"Статус не равен 200: {resp.status_code} - {resp.json()}")
+            json_ = resp.json()
+            if len(json_) == 0:
+                raise Exception(f'Неверная длина массива: {len(json_)}')
+            print("OK test_OK_admin_gets_own_posts")
+        except Exception as e:
+            print(f"FAIL test_OK_admin_gets_own_posts: {e}")
+
+    def test_OK_bloger_gets_own_posts(self):
+        try:
+            token = auth.Auth().getBlogerToken()
+            if not token:
+                raise Exception('Токен не получен!')
+            resp = requests.get("http://localhost/backend/posts/userPosts", headers={
+                'auth-token': token,
+            })
+            if resp.status_code != 200:
+                raise Exception(f"Статус не равен 200: {resp.status_code} - {resp.json()}")
+            print("OK test_OK_bloger_gets_own_posts")
+        except Exception as e:
+            print(f"FAIL test_OK_bloger_gets_own_posts: {e}")
+
+    def test_FORBIDDEN_getting_user_posts_without_token(self):
+        try:
+            resp = requests.get("http://localhost/backend/posts/userPosts")
+            if resp.status_code != 403:
+                raise Exception(f"Статус не равен 403: {resp.status_code} - {resp.json()}")
+            json_ = resp.json()
+            if "message" not in json_:
+                raise Exception("В теле запроса нет сообщения об ошибке!")
+            print("OK test_FORBIDDEN_getting_user_posts_without_token")
+        except Exception as e:
+            print(f"FAIL test_FORBIDDEN_getting_user_posts_without_token: {e}")
+
 class TestGetActualPosts:
     def launch(self):
         print("# Test Get Actual Posts")
@@ -10,7 +60,7 @@ class TestGetActualPosts:
         try:
             resp = requests.get("http://localhost/backend/posts/actual")
             if resp.status_code != 200:
-                raise Exception(f"Статус не равен 200: {resp.status_code}")
+                raise Exception(f"Статус не равен 200: {resp.status_code} - {resp.json()}")
             json_ = resp.json()
             if len(json_) != 1:
                 raise Exception(f'Неверная длина массива: {len(json_)}')
@@ -520,9 +570,82 @@ class TestRejectPost:
         except Exception as e:
             print(f"FAIL test_NOT_FOUND_reject_post_with_unknown_token: {e}")
 
+class TestDeletePost:
+    def launch(self):
+        print("# Test Delete Post")
+        self.test_NOT_FOUND_delete_unexisting_post()
+        self.test_FORBIDDEN_delete_post_without_token()
+        self.test_FORBIDDEN_user_deletes_another_users_post()
+        self.test_OK_author_deletes_own_post()
+
+    def test_OK_author_deletes_own_post(self):
+        try:
+            token = auth.Auth().getAdminToken()
+            if not token:
+                raise Exception('Токен не получен!')
+            resp = requests.delete("http://localhost/backend/posts/delete", params={
+                "idPost": 3,
+            }, headers={
+                "auth-token": token,
+            })
+            if resp.status_code != 200:
+                raise Exception(f"Статус не равен 200: {resp.status_code} - {resp.json()}")
+            print("OK test_OK_author_deletes_own_post")
+        except Exception as e:
+            print(f"FAIL test_OK_author_deletes_own_post: {e}")
+
+    def test_NOT_FOUND_delete_unexisting_post(self):
+        try:
+            token = auth.Auth().getAdminToken()
+            if not token:
+                raise Exception('Токен не получен!')
+            resp = requests.delete("http://localhost/backend/posts/delete", params={
+                "idPost": 22321,
+            }, headers={
+                "auth-token": token,
+            })
+            if resp.status_code != 404:
+                raise Exception(f"Статус не равен 404: {resp.status_code} - {resp.json()}")
+            print("OK test_NOT_FOUND_delete_unexisting_post")
+        except Exception as e:
+            print(f"FAIL test_NOT_FOUND_delete_unexisting_post: {e}")
+
+    def test_FORBIDDEN_delete_post_without_token(self):
+        try:
+            token = auth.Auth().getAdminToken()
+            if not token:
+                raise Exception('Токен не получен!')
+            resp = requests.delete("http://localhost/backend/posts/delete", params={
+                "idPost": 3,
+            }, headers={
+                #! "auth-token": token,
+            })
+            if resp.status_code != 403:
+                raise Exception(f"Статус не равен 403: {resp.status_code} - {resp.json()}")
+            print("OK test_FORBIDDEN_delete_post_without_token")
+        except Exception as e:
+            print(f"FAIL test_FORBIDDEN_delete_post_without_token: {e}")
+
+    def test_FORBIDDEN_user_deletes_another_users_post(self):
+        try:
+            token = auth.Auth().getBlogerToken()
+            if not token:
+                raise Exception('Токен не получен!')
+            resp = requests.delete("http://localhost/backend/posts/delete", params={
+                "idPost": 3,
+            }, headers={
+                "auth-token": token,
+            })
+            if resp.status_code != 403:
+                raise Exception(f"Статус не равен 403: {resp.status_code} - {resp.json()}")
+            print("OK test_FORBIDDEN_user_deletes_another_users_post")
+        except Exception as e:
+            print(f"FAIL test_FORBIDDEN_user_deletes_another_users_post: {e}")
+
 
 def launch():
     print("\n--- Posts Controller ---\n")
+    TestGetUserPosts().launch()
     TestGetActualPosts().launch()
     TestGetActualPost().launch()
     TestGetPostsNeedToApprove().launch()
@@ -530,3 +653,4 @@ def launch():
     TestCreatePost().launch()
     TestApprovePost().launch()
     TestRejectPost().launch()
+    TestDeletePost().launch()
