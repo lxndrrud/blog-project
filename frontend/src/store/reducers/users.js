@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginRequest } from '../actions/users'
+import { loginRequest, registerRequest } from '../actions/users'
 
 const initialState = {
     token: null,
@@ -42,5 +42,11 @@ export const usersReducer = createSlice({
         },
         [loginRequest.pending]: pending,
         [loginRequest.rejected]: rejected,
+
+        [registerRequest.fulfilled]: (state, action) => {
+            defaultFullfilled(state)
+        },
+        [registerRequest.pending]: pending,
+        [registerRequest.rejected]: rejected,
     }
 })

@@ -6,6 +6,7 @@ import CustomButton from '../CustomButton/CustomButton'
 import { usersReducer } from '../../../store/reducers/users'
 import { useNavigate } from 'react-router'
 import { permissionCheck } from '../../../utils/PermissionCheck'
+import AccountLabel from '../AccountLabel/AccountLabel'
 
 function Header() {
     const dispatch = useDispatch()
@@ -35,21 +36,34 @@ function Header() {
                                     <HeaderLink destination={'/newPost'} text={'Написать'} />,
                                     <HeaderLink destination={'/myPosts'} text={'Мои посты'} />,
                                     <HeaderLink destination={'/postsToCheck'} text={'Модерировать'} />,
-                                    <CustomButton text={"Выйти"} callback={logout}  />
+                                    <AccountLabel />,
+                                    <CustomButton 
+                                        text={"Выйти"} 
+                                        callback={logout}
+                                    />
                                 ]
                             :
                                 [
                                     <HeaderLink destination={'/newPost'} text={'Написать'} />,
                                     <HeaderLink destination={'/myPosts'} text={'Мои посты'} />,
-                                    <CustomButton text={"Выйти"} callback={logout}  />
+                                    <AccountLabel />,
+                                    <CustomButton 
+                                        text={"Выйти"} 
+                                        callback={logout}
+                                    />
                                 ]
                         :
                             [
                                 <HeaderLink destination={'/myPosts'} text={'Мои посты'} />,
-                                <CustomButton text={"Выйти"} callback={logout}  />
+                                <AccountLabel />,
+                                <CustomButton 
+                                    text={"Выйти"} 
+                                    callback={logout} 
+                                />
                             ]
                     :
                         [
+                            <HeaderLink destination={'/register'} text={'Регистрация'} />,
                             <HeaderLink destination={'/login'} text={'Вход'} />
                         ]
                 }

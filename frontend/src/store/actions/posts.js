@@ -21,14 +21,24 @@ export const fetchApprovedPosts = createAsyncThunk(
 
 export const createPostRequest = createAsyncThunk(
     'posts/createPost',
-    async ({ token, title, annotation, text, timeStart, timeEnd }, thunkApi) => {
+    async ({ token, title, annotation, text, timeStart, timeEnd, picture }, thunkApi) => {
         try {
+            /*
+            let data = new FormData();
+            data.append('picture', picture, picture.name);
+            data.append('title', title)
+            data.append('annotation', annotation)
+            data.append('text', text)
+            data.append('timeStart', timeStart ? timeStart + " 00:00:00" : null)
+            data.append('timeEnd', timeEnd ? timeEnd + " 00:00:00" : null)
+            */
             const response = await axios.post("/backend/posts/new", { title, annotation, text, 
                     timeStart: timeStart ? timeStart + " 00:00:00" : null, 
                     timeEnd: timeEnd ? timeEnd + " 00:00:00" : null,
                 }, {
                 headers: {
-                    'auth-token': token
+                    'auth-token': token,
+                    // 'Content-Type': `multipart/form-data`
                 }
             })
             return response.data

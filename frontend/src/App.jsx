@@ -11,6 +11,7 @@ import LoginMiddleware from './middlewares/LoginMiddleware'
 import DeletePostPage from './pages/DeletePostPage'
 import UserPostsPage from './pages/UserPostsPage'
 import DetailApprovedPostPage from './pages/DetailApprovedPostPage'
+import RegisterPage from './pages/RegisterPage'
 
 function App() {
     return (
@@ -19,6 +20,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={ <IndexPage /> } />
                     <Route path="/login" element={ <LoginPage /> } />
+                    <Route path="/register" element={ <RegisterPage /> } />
                     <Route path="/newPost" element={ 
                         <PermissionMiddleware permission={'СОЗД_ПОСТЫ'}>
                             <CreatePostPage />

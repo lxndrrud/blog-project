@@ -45,6 +45,7 @@ type userService struct {
 	}
 	generator interface {
 		CheckPassword(hashedPassword, password string) error
+		HashPassword(password string) (string, error)
 	}
 }
 
@@ -128,8 +129,13 @@ func (c userService) RegisterUser(login, password string) models.IError {
 		return models.NewError(http.StatusConflict,
 			"Пользователь с таким логином уже существует!")
 	}
+	hashedPassword, err := c.generator.HashPassword(password)
+	if err != nil {
+		return models.NewError(http.StatusInternalServerError,
+			"Непредвиденная ошибка во время хеширования пароля: "+err.Error())
+	}
 	// Создание нового пользователя
-	_, err = c.userRepo.InsertUser(login, password)
+	_, err = c.userRepo.InsertUser(login, hashedPassword)
 	if err != nil {
 		return models.NewError(http.StatusInternalServerError,
 			"Непредвиденная ошибка: "+err.Error())

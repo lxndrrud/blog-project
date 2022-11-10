@@ -21,6 +21,7 @@ function CreatePostForm() {
     let [annotation, setAnnotation] = useState(null)
     let [timeStart, setTimeStart] = useState(null)
     let [timeEnd, setTimeEnd] = useState(null)
+    let [picture, setPicture] = useState(null)
 
     const validate = () => {
         if (!title) {
@@ -47,6 +48,16 @@ function CreatePostForm() {
             })
             return false
         }
+        /*
+        if (!picture) {
+            Swal.fire({
+                title: 'Ошибка валидации!',
+                text: 'Постер для поста не указан!',
+                icon: 'error'
+            })
+            return false
+        }
+        */
         return true
     }
 
@@ -55,7 +66,7 @@ function CreatePostForm() {
 
         if (!(validate())) return
 
-        dispatch(createPostRequest({ token, title, annotation, text, timeStart, timeEnd }))
+        dispatch(createPostRequest({ token, title, annotation, text, timeStart, timeEnd, picture }))
         .then(() => {
             const error = store.getState().posts.error
             if (error) {
@@ -80,6 +91,7 @@ function CreatePostForm() {
     return (
         <div className='flex flex-col justify-center'>
             <CustomInput type="text" text={title} callback={setTitle} description="Заголовок" />
+            <input type="file" name="post_picture" id="post_picture" onChange={(e) => setPicture(e.target.value)} />
             <CustomInput type="text" text={annotation} callback={setAnnotation} description="Аннотация" />
             <CustomTextArea text={text} callback={setText} description="Основной текст" />
             <CustomDatepicker description={'Дата начала отображения'} callback={setTimeStart} />
