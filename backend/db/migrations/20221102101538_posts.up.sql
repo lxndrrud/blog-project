@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS "public"."posts" (
     title VARCHAR(100) NOT NULL,
     annotation TEXT NOT NULL,
     text TEXT NOT NULL,
-    picture VARCHAR(200),
+    picture VARCHAR(200) NOT NULL,
     views BIGINT NOT NULL DEFAULT 0 CHECK (views >= 0),
     approved BOOLEAN NOT NULL DEFAULT FALSE,
     rejected BOOLEAN NOT NULL DEFAULT FALSE,

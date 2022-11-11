@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"strconv"
 	"time"
@@ -40,7 +41,8 @@ type postController struct {
 		GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
 		GetPostNeedToApprove(token string, idPost int64) (models.Post, models.IError)
 		CreatePost(title, text, annotation, token string,
-			timeStart *time.Time, timeEnd *time.Time) models.IError
+			timeStart *time.Time, timeEnd *time.Time, pictureFile multipart.File,
+			pictureHeader *multipart.FileHeader) models.IError
 		ApprovePost(token string, idPost int64) models.IError
 		RejectPost(token string, idPost int64) models.IError
 		DeletePost(token string, idPost int64) models.IError
@@ -84,43 +86,29 @@ func (c postController) CreatePost(ctx *gin.Context) {
 		})
 		return
 	}
-	var form struct {
-		Title      string  `json:"title"`
-		Text       string  `json:"text"`
-		Annotation string  `json:"annotation"`
-		TimeStart  *string `json:"timeStart"`
-		TimeEnd    *string `json:"timeEnd"`
-	}
-	err := json.NewDecoder(ctx.Request.Body).Decode(&form)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, map[string]any{
-			"message": err.Error(),
-		})
-		return
-	}
-	ctx.Request.Body.Close()
-	if form.Title == "" {
+
+	if ctx.PostForm("title") == "" {
 		ctx.JSON(http.StatusBadRequest, map[string]any{
 			"message": "Не указан заголовок поста",
 		})
 		return
 	}
-	if form.Text == "" {
-		ctx.JSON(http.StatusBadRequest, map[string]any{
-			"message": "Не указан заголовок поста",
-		})
-		return
-	}
-	if form.Annotation == "" {
+	if ctx.PostForm("annotation") == "" {
 		ctx.JSON(http.StatusBadRequest, map[string]any{
 			"message": "Не указан аннотация поста",
 		})
 		return
 	}
+	if ctx.PostForm("text") == "" {
+		ctx.JSON(http.StatusBadRequest, map[string]any{
+			"message": "Не указан текст поста",
+		})
+		return
+	}
 
 	var timeStart *time.Time = nil
-	if form.TimeStart != nil {
-		parsed, err := time.Parse("2006-01-02 15:04:05", *form.TimeStart)
+	if ctx.PostForm("timeStart") != "null" {
+		parsed, err := time.Parse("2006-01-02 15:04:05", ctx.PostForm("timeStart"))
 		if err != nil {
 			fmt.Println(err)
 			ctx.JSON(http.StatusBadRequest, map[string]any{
@@ -133,8 +121,8 @@ func (c postController) CreatePost(ctx *gin.Context) {
 		}
 	}
 	var timeEnd *time.Time = nil
-	if form.TimeEnd != nil {
-		parsed, err := time.Parse("2006-01-02 15:04:05", *form.TimeEnd)
+	if ctx.PostForm("timeEnd") != "null" {
+		parsed, err := time.Parse("2006-01-02 15:04:05", ctx.PostForm("timeEnd"))
 		if err != nil {
 			fmt.Println(err)
 			ctx.JSON(http.StatusBadRequest, map[string]any{
@@ -146,11 +134,18 @@ func (c postController) CreatePost(ctx *gin.Context) {
 			timeEnd = &parsed
 		}
 	}
-
-	errService := c.postService.CreatePost(form.Title, form.Text,
-		form.Annotation,
-		ctx.GetHeader("auth-token"), timeStart, timeEnd)
+	file, header, err := ctx.Request.FormFile("picture")
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, map[string]any{
+			"message": "Картинка для поста не прикреплена!",
+		})
+		return
+	}
+	errService := c.postService.CreatePost(ctx.PostForm("title"), ctx.PostForm("text"),
+		ctx.PostForm("annotation"),
+		ctx.GetHeader("auth-token"), timeStart, timeEnd, file, header)
 	if errService != nil {
+		fmt.Println(errService.GetMessage())
 		ctx.JSON(errService.GetCode(), map[string]any{
 			"message": errService.GetMessage(),
 		})

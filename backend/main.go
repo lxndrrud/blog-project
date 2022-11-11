@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/go-redis/redis/v8"
@@ -26,7 +25,6 @@ func main() {
 		log.Fatalln("Подключение к базе данных не осуществлено!" + err.Error())
 	}
 	// Подключение к кэшу
-	fmt.Println(viper.GetString("CACHE_HOST")+":"+viper.GetString("CACHE_PORT"), viper.GetString("CACHE_PASSWORD"))
 	redisConn := redis.NewClient(&redis.Options{
 		Addr:     viper.GetString("CACHE_HOST") + ":" + viper.GetString("CACHE_PORT"),
 		Password: viper.GetString("CACHE_PASSWORD"),

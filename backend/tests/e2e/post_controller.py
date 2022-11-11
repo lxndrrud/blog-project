@@ -1,4 +1,5 @@
 import requests
+import os
 import auth
 
 class TestGetUserPosts:
@@ -79,20 +80,21 @@ class TestCreatePost:
         self.test_OK_bloger_creates_post()
         self.test_OK_admin_creates_post_with_timeEnd()
 
-        
-
     # * Without timeStart and timeEnd
     def test_OK_admin_creates_post(self):
         try:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            resp = requests.post("http://localhost/backend/posts/new", {
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
             }, headers= {
                 "auth-token": token
+            }, files= {
+                "picture": ("diretide.jpeg", 
+                    open(os.path.join(os.path.dirname(__file__), "../../storage/diretide.jpeg"), 'rb') )
             })
             if resp.status_code != 201:
                 raise Exception(f"Статус не равен 201: {resp.status_code}")
@@ -106,12 +108,15 @@ class TestCreatePost:
             token = auth.Auth().getBlogerToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            resp = requests.post("http://localhost/backend/posts/new", {
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
             }, headers= {
                 "auth-token": token
+            }, files= {
+                "picture": ("diretide.jpeg", 
+                    open(os.path.join(os.path.dirname(__file__), "../../storage/diretide.jpeg"), 'rb') )
             })
             if resp.status_code != 201:
                 raise Exception(f"Статус не равен 201: {resp.status_code}")
@@ -125,13 +130,17 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            
+            resp = requests.post("http://localhost/backend/posts/new", {
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
                 "timeEnd": "2023-01-15 01:35:00"
             }, headers= {
                 "auth-token": token
+            }, files= {
+                "picture": ("diretide.jpeg", 
+                    open(os.path.join(os.path.dirname(__file__), "../../storage/diretide.jpeg"), 'rb') )
             })
             if resp.status_code != 201:
                 raise Exception(f"Статус не равен 201: {resp.status_code} - {resp.json()} ")
@@ -142,7 +151,7 @@ class TestCreatePost:
     def test_FAIL_unexisting_token(self):
         try:
             token = "wrong_unexisting_token!"
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            resp = requests.post("http://localhost/backend/posts/new", {
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
@@ -160,7 +169,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception('Токен не получен!')
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            resp = requests.post("http://localhost/backend/posts/new", {
                 #! "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",
@@ -178,7 +187,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception('Токен не получен!')
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            resp = requests.post("http://localhost/backend/posts/new", {
                 "title": "test title",
                 "annotation": "test annotation",
                 #! "text": "test text",
@@ -196,7 +205,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception('Токен не получен!')
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            resp = requests.post("http://localhost/backend/posts/new", {
                 "title": "test title",
                 #! "annotation": "test annotation",
                 "text": "test text",
@@ -214,7 +223,7 @@ class TestCreatePost:
             token = auth.Auth().getAdminToken()
             if not token:
                 raise Exception("Токен не получен!")
-            resp = requests.post("http://localhost/backend/posts/new", json={
+            resp = requests.post("http://localhost/backend/posts/new", {
                 "title": "test title",
                 "annotation": "test annotation",
                 "text": "test text",

@@ -48,7 +48,6 @@ function CreatePostForm() {
             })
             return false
         }
-        /*
         if (!picture) {
             Swal.fire({
                 title: 'Ошибка валидации!',
@@ -57,7 +56,6 @@ function CreatePostForm() {
             })
             return false
         }
-        */
         return true
     }
 
@@ -91,7 +89,7 @@ function CreatePostForm() {
     return (
         <div className='flex flex-col justify-center'>
             <CustomInput type="text" text={title} callback={setTitle} description="Заголовок" />
-            <input type="file" name="post_picture" id="post_picture" onChange={(e) => setPicture(e.target.value)} />
+            <input type="file" name="post_picture" id="post_picture" onChange={(e) => setPicture(e.target.files[0])} />
             <CustomInput type="text" text={annotation} callback={setAnnotation} description="Аннотация" />
             <CustomTextArea text={text} callback={setText} description="Основной текст" />
             <CustomDatepicker description={'Дата начала отображения'} callback={setTimeStart} />

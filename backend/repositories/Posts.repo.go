@@ -179,16 +179,17 @@ func (c *postsRepo) GetUserPosts(idUser int64) ([]models.Post, error) {
 func (c *postsRepo) InsertPost(post models.Post) error {
 	_, err := c.db.Exec(
 		`
-		INSERT INTO "public"."posts"(title, annotation, text, id_author, time_start, time_end) 
+		INSERT INTO "public"."posts"(title, annotation, text, id_author, time_start, time_end, picture) 
 		VALUES
-			($1, $2, $3, $4, $5, $6);
+			($1, $2, $3, $4, $5, $6, $7);
 		`,
 		post.Title,
 		post.Annotation,
 		post.Text,
 		post.IdAuthor,
 		post.TimeStart,
-		post.TimeEnd)
+		post.TimeEnd,
+		post.Picture)
 	return err
 }
 

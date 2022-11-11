@@ -11,7 +11,7 @@ services:
     networks: 
       - blog_network
     ports:
-      - 5432:5432
+      - 6432:5432
 
   cacher:
     container_name: cacher-blog
@@ -60,7 +60,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./backend:/usr/src/app
+      - ./backend/storage:/go/src/goserver/storage
     ports:
       - 8001:8001
     networks: 
@@ -77,12 +77,12 @@ services:
     links:
         - backend
         - postgres
-        - pgadmin
+        - adminer
     networks:
         - blog_network
     volumes:
         - './backend/storage:/var/www/storage'
-        - './frontend/dist:/var/www/reservations'
+        - './frontend/dist:/var/www/blog'
         - './nginx:/var/log/nginx'
         - './nginx/prod/conf.d:/etc/nginx/conf.d'
 

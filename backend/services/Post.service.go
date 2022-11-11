@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -20,7 +21,8 @@ type IPostService interface {
 	GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
 	GetPostNeedToApprove(token string, idPost int64) (models.Post, models.IError)
 	CreatePost(title, text, annotation, token string,
-		timeStart *time.Time, timeEnd *time.Time) models.IError
+		timeStart *time.Time, timeEnd *time.Time, pictureFile multipart.File,
+		pictureHeader *multipart.FileHeader) models.IError
 	ApprovePost(token string, idPost int64) models.IError
 	RejectPost(token string, idPost int64) models.IError
 	DeletePost(token string, idPost int64) models.IError
@@ -32,6 +34,7 @@ func NewPostService(db *sqlx.DB, redisConn *redis.Client) IPostService {
 		userRepo:          repositories.NewUserRepo(db),
 		permissionInfra:   infrastructure.NewPermissionInfra(db, redisConn),
 		permissionChecker: utils.NewPermissionChecker(),
+		fileProcessor:     utils.NewFileProcessor(),
 	}
 }
 
@@ -55,6 +58,10 @@ type postService struct {
 	permissionInfra interface {
 		GetPermissionsList(token string) ([]models.Permission, models.IError)
 		GetUserIdByToken(token string) (int64, models.IError)
+	}
+	fileProcessor interface {
+		SaveFileOnDisk(file multipart.File, header *multipart.FileHeader) (string, models.IError)
+		DeleteFile(filename string) models.IError
 	}
 	permissionChecker utils.IPermissionChecker
 }
@@ -137,7 +144,8 @@ func (c postService) GetPostNeedToApprove(token string, idPost int64) (models.Po
 }
 
 func (c postService) CreatePost(title, text, annotation, token string,
-	timeStart *time.Time, timeEnd *time.Time) models.IError {
+	timeStart *time.Time, timeEnd *time.Time, pictureFile multipart.File,
+	pictureHeader *multipart.FileHeader) models.IError {
 	idUser, errService := c.permissionInfra.GetUserIdByToken(token)
 	if errService != nil {
 		return errService
@@ -150,6 +158,11 @@ func (c postService) CreatePost(title, text, annotation, token string,
 	// Проверить разрешение на создание постов
 	if !c.permissionChecker.CanCreatePosts(permissions) {
 		return models.NewError(http.StatusForbidden, "Вам запрещено создавать посты!")
+	}
+	// Сохранить файл на диск и получить имя файла для записи в базу
+	filename, errService := c.fileProcessor.SaveFileOnDisk(pictureFile, pictureHeader)
+	if errService != nil {
+		return errService
 	}
 
 	dbTimeStart := sql.NullTime{}
@@ -173,6 +186,7 @@ func (c postService) CreatePost(title, text, annotation, token string,
 		TimeStart:  dbTimeStart,
 		TimeEnd:    dbTimeEnd,
 		IdAuthor:   idUser,
+		Picture:    "/" + filename,
 	}
 	err := c.postRepo.InsertPost(post)
 	if err != nil {
@@ -225,6 +239,10 @@ func (c postService) DeletePost(token string, idPost int64) models.IError {
 	}
 	if post.IdAuthor != idUser {
 		return models.NewError(http.StatusForbidden, "Вы не являетесь автором поста!")
+	}
+	errService = c.fileProcessor.DeleteFile(post.Picture)
+	if errService != nil {
+		return errService
 	}
 	err = c.postRepo.DeletePost(idPost)
 	if err != nil {

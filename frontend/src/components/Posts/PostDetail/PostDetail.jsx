@@ -22,13 +22,14 @@ function PostDetail() {
                     rounded-md border border-solid border-[black]'>
                         <h3 className='text-[28px] font-bold self-center'>{post.title}</h3>
                         <h4 className='self-center'>Автор: {post.author_login}</h4>
-                        <PostPictureImage filepath={post.picture.String} altDescription={post.title} />
+                        <PostPictureImage filepath={post.picture} altDescription={post.title} />
                         <h4 className='mt-2'>{post.annotation}</h4>
                         <p className='mt-2'>{post.text}</p>
                         <div className='flex flex-col mt-2 text-[14px]'>
-                            <h4>Время создания: { moment(post.created_at).format('DD.MM.YYYY hh:mm').toString()} </h4>
-                            { post.time_start.Valid && <h4>Время начала доступности: {moment(post.time_start.Time).format('DD.MM.YYYY hh:mm').toString()}</h4> }
-                            { post.time_end.Valid && <h4>Время конца доступности: {moment(post.time_end.Time).format('DD.MM.YYYY hh:mm').toString()}</h4> }
+                            <h4>Просмотров: {post.views}</h4>
+                            <h4>Время создания: { moment(post.created_at).format('DD.MM.YYYY HH:mm').toString()} </h4>
+                            { post.time_start.Valid && <h4>Время начала доступности: {moment(post.time_start.Time).format('DD.MM.YYYY HH:mm').toString()}</h4> }
+                            { post.time_end.Valid && <h4>Время конца доступности: {moment(post.time_end.Time).format('DD.MM.YYYY HH:mm').toString()}</h4> }
                         </div>
                         <div className='flex mt-2 self-center'>
                             { 
