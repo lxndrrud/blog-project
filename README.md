@@ -1,11 +1,13 @@
 # blog-project
 
 Проект Блога. Клиент-серверное приложение на платформе Docker.
+Сервисы связаны между собой при помощи прокси-сервера Nginx.
+
 <ul>
   <li>Backend (Серверная часть) написана на Golang/Gin/sqlx/go-redis.</li> 
 <li>Осуществлено end-to-end тестирование при помощи скриптов на Python.</li> 
 <li>Frontend (Клиентская часть) написана на React/Redux/TailwindCSS.</li> 
-</ul
+</ul>
   
 Средство администрирования PostgreSQL - adminer.
 
