@@ -1,10 +1,11 @@
 # blog-project
 
 Проект Блога. Клиент-серверное приложение на платформе Docker.
-
-Backend (Серверная часть) написана на Golang/Gin/sqlx/go-redis. 
-Осуществлено end-to-end тестирование при помощи скриптов на Python.
-Frontend (Клиентская часть) написана на React/Redux/TailwindCSS
+<ul>
+  <li>Backend (Серверная часть) написана на Golang/Gin/sqlx/go-redis.</li> 
+<li>Осуществлено end-to-end тестирование при помощи скриптов на Python.</li> 
+<li>Frontend (Клиентская часть) написана на React/Redux/TailwindCSS.</li> 
+</ul
 
 Базы данных: PostgreSQL как основная база хранения данных, Redis как база для кэширования.
 Аутентификация по токену.
