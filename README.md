@@ -6,6 +6,8 @@
 <li>Осуществлено end-to-end тестирование при помощи скриптов на Python.</li> 
 <li>Frontend (Клиентская часть) написана на React/Redux/TailwindCSS.</li> 
 </ul
+  
+Средство администрирования PostgreSQL - adminer.
 
 
 Базы данных: 
