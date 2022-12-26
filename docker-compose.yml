@@ -60,7 +60,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./backend/storage:/go/src/goserver/storage
+      - ./backend:/usr/src/app
     ports:
       - 8001:8001
     networks: 

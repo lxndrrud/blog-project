@@ -1,1 +1,0 @@
-sh ../../down_migrate.sh && sh ../../up_migrate.sh && python3 test.py

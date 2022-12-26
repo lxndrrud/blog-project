@@ -1,28 +1,14 @@
-FROM golang:1.18-alpine
+FROM node:16.13.2-alpine
 
+RUN apk update && apk add tzdata
+ENV TZ=Europe/Moscow
 
-#RUN apk update && apk add tzdata
-#ENV TZ=Europe/Moscow
+COPY . /usr/src/app
 
-#RUN apk add --no-cache alpine-conf && \
-    #setup-timezone -z Europe/Moscow
+WORKDIR /usr/src/app
 
+USER node
 
-COPY ./ /go/src/goserver
-WORKDIR /go/src/goserver
+ENTRYPOINT [ "npm", "start" ]
 
-ENV GOPATH=/go/src/backend/.go
-ENV GIN_MODE=release
-
-
-#RUN go mod init
-
-#COPY go.mod go.sum ./
-RUN go mod download
-RUN go build -o server .
-
-
-
-EXPOSE 8081
-
-CMD [ "./server" ]
+EXPOSE 8001
