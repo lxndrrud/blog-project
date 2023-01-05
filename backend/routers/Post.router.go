@@ -5,10 +5,29 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/lxndrrud/blog-project/controllers"
+	"github.com/lxndrrud/blog-project/infrastructure"
+	"github.com/lxndrrud/blog-project/repositories"
+	"github.com/lxndrrud/blog-project/services"
+	"github.com/lxndrrud/blog-project/utils"
 )
 
 func setupPostRouter(router *gin.RouterGroup, db *sqlx.DB, redisConn *redis.Client) {
-	controller := controllers.NewPostController(db, redisConn)
+	postRepo := repositories.NewPostsRepo(db)
+	userRepo := repositories.NewUserRepo(db)
+	permissionInfra := infrastructure.NewPermissionInfra(db, redisConn)
+	fileProcessor := utils.NewFileProcessor()
+	permissionChecker := utils.NewPermissionChecker()
+
+	postService := services.NewPostService(
+		postRepo,
+		userRepo,
+		permissionInfra,
+		fileProcessor,
+		permissionChecker,
+	)
+
+	controller := controllers.NewPostController(postService)
+
 	router.GET("/userPosts", controller.GetUserPosts)
 	router.GET("/actual", controller.GetApprovedPosts)
 	router.GET("/needToApprove", controller.GetPostsNeedToApprove)

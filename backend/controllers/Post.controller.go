@@ -9,11 +9,22 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
 	"github.com/lxndrrud/blog-project/models"
-	"github.com/lxndrrud/blog-project/services"
 )
+
+type IPostControllerPostService interface {
+	GetUserPosts(token string) ([]models.Post, models.IError)
+	GetApprovedPosts() ([]models.Post, models.IError)
+	GetApprovedPost(idPost int64) (models.Post, models.IError)
+	GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
+	GetPostNeedToApprove(token string, idPost int64) (models.Post, models.IError)
+	CreatePost(title, text, annotation, token string,
+		timeStart *time.Time, timeEnd *time.Time, pictureFile multipart.File,
+		pictureHeader *multipart.FileHeader) models.IError
+	ApprovePost(token string, idPost int64) models.IError
+	RejectPost(token string, idPost int64) models.IError
+	DeletePost(token string, idPost int64) models.IError
+}
 
 type IPostController interface {
 	GetUserPosts(ctx *gin.Context)
@@ -27,26 +38,14 @@ type IPostController interface {
 	DeletePost(ctx *gin.Context)
 }
 
-func NewPostController(db *sqlx.DB, redisConn *redis.Client) IPostController {
+func NewPostController(postService IPostControllerPostService) IPostController {
 	return &postController{
-		postService: services.NewPostService(db, redisConn),
+		postService: postService,
 	}
 }
 
 type postController struct {
-	postService interface {
-		GetUserPosts(token string) ([]models.Post, models.IError)
-		GetApprovedPosts() ([]models.Post, models.IError)
-		GetApprovedPost(idPost int64) (models.Post, models.IError)
-		GetPostsNeedToApprove(token string) ([]models.Post, models.IError)
-		GetPostNeedToApprove(token string, idPost int64) (models.Post, models.IError)
-		CreatePost(title, text, annotation, token string,
-			timeStart *time.Time, timeEnd *time.Time, pictureFile multipart.File,
-			pictureHeader *multipart.FileHeader) models.IError
-		ApprovePost(token string, idPost int64) models.IError
-		RejectPost(token string, idPost int64) models.IError
-		DeletePost(token string, idPost int64) models.IError
-	}
+	postService IPostControllerPostService
 }
 
 func (c postController) GetUserPosts(ctx *gin.Context) {

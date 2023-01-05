@@ -6,13 +6,42 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
-	"github.com/lxndrrud/blog-project/infrastructure"
 	"github.com/lxndrrud/blog-project/models"
-	"github.com/lxndrrud/blog-project/repositories"
-	"github.com/lxndrrud/blog-project/utils"
 )
+
+// Интерфейсы зависимостей сервиса
+type IPostServicePostRepo interface {
+	GetPostById(idPost int64) (models.Post, error)
+	GetUserPosts(idUser int64) ([]models.Post, error)
+	GetApprovedPosts() ([]models.Post, error)
+	GetApprovedPost(idPost int64) (models.Post, error)
+	GetPostsNeedToApprove() ([]models.Post, error)
+	GetPostNeedToApprove(idPost int64) (models.Post, error)
+	InsertPost(post models.Post) error
+	AddViews(idPost int64, viewsQuantity int64) error
+	ApprovePost(idPost int64) error
+	RejectPost(idPost int64) error
+	DeletePost(idPost int64) error
+}
+
+type IPostServiceUserRepo interface {
+	GetUserById(idUser int64) (models.User, error)
+}
+
+type IPostServicePermissionInfra interface {
+	GetPermissionsList(token string) ([]models.Permission, models.IError)
+	GetUserIdByToken(token string) (int64, models.IError)
+}
+
+type IPostServiceFileProcessor interface {
+	SaveFileOnDisk(file multipart.File, header *multipart.FileHeader) (string, models.IError)
+	DeleteFile(filename string) models.IError
+}
+
+type IPostServicePermissionChecker interface {
+	CanCreatePosts(permissions []models.Permission) bool
+	CanModeratePosts(permissions []models.Permission) bool
+}
 
 type IPostService interface {
 	GetUserPosts(token string) ([]models.Post, models.IError)
@@ -28,42 +57,28 @@ type IPostService interface {
 	DeletePost(token string, idPost int64) models.IError
 }
 
-func NewPostService(db *sqlx.DB, redisConn *redis.Client) IPostService {
-	return &postService{
-		postRepo:          repositories.NewPostsRepo(db),
-		userRepo:          repositories.NewUserRepo(db),
-		permissionInfra:   infrastructure.NewPermissionInfra(db, redisConn),
-		permissionChecker: utils.NewPermissionChecker(),
-		fileProcessor:     utils.NewFileProcessor(),
-	}
+type postService struct {
+	postRepo          IPostServicePostRepo
+	userRepo          IPostServiceUserRepo
+	permissionInfra   IPostServicePermissionInfra
+	fileProcessor     IPostServiceFileProcessor
+	permissionChecker IPostServicePermissionChecker
 }
 
-type postService struct {
-	postRepo interface {
-		GetPostById(idPost int64) (models.Post, error)
-		GetUserPosts(idUser int64) ([]models.Post, error)
-		GetApprovedPosts() ([]models.Post, error)
-		GetApprovedPost(idPost int64) (models.Post, error)
-		GetPostsNeedToApprove() ([]models.Post, error)
-		GetPostNeedToApprove(idPost int64) (models.Post, error)
-		InsertPost(post models.Post) error
-		AddViews(idPost int64, viewsQuantity int64) error
-		ApprovePost(idPost int64) error
-		RejectPost(idPost int64) error
-		DeletePost(idPost int64) error
+func NewPostService(
+	postRepo IPostServicePostRepo,
+	userRepo IPostServiceUserRepo,
+	permissionInfra IPostServicePermissionInfra,
+	fileProcessor IPostServiceFileProcessor,
+	permissionChecker IPostServicePermissionChecker,
+) IPostService {
+	return &postService{
+		postRepo:          postRepo,
+		userRepo:          userRepo,
+		permissionInfra:   permissionInfra,
+		fileProcessor:     fileProcessor,
+		permissionChecker: permissionChecker,
 	}
-	userRepo interface {
-		GetUserById(idUser int64) (models.User, error)
-	}
-	permissionInfra interface {
-		GetPermissionsList(token string) ([]models.Permission, models.IError)
-		GetUserIdByToken(token string) (int64, models.IError)
-	}
-	fileProcessor interface {
-		SaveFileOnDisk(file multipart.File, header *multipart.FileHeader) (string, models.IError)
-		DeleteFile(filename string) models.IError
-	}
-	permissionChecker utils.IPermissionChecker
 }
 
 func (c postService) GetUserPosts(token string) ([]models.Post, models.IError) {

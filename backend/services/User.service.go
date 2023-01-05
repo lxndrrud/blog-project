@@ -4,12 +4,28 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
 	"github.com/lxndrrud/blog-project/models"
-	"github.com/lxndrrud/blog-project/repositories"
-	"github.com/lxndrrud/blog-project/utils"
 )
+
+type IUserServiceUserRepo interface {
+	GetUserById(idUser int64) (models.User, error)
+	GetUserByLogin(login string) (models.User, error)
+	InsertUser(login, password string) (int64, error)
+}
+type IUserServicePostsRepo interface {
+	GetUserPosts(idUser int64) ([]models.Post, error)
+}
+type IUserServiceUserSessionRepo interface {
+	CreateSession(idUser int64, password string) (models.UserSession, error)
+	GetUserSession(token string) (models.UserSession, error)
+}
+type IUserServicePermissionsRepo interface {
+	GetPermissionsList(idUser int64) ([]models.Permission, error)
+}
+type IUserServiceGenerator interface {
+	CheckPassword(hashedPassword, password string) error
+	HashPassword(password string) (string, error)
+}
 
 type IUserService interface {
 	GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
@@ -17,36 +33,28 @@ type IUserService interface {
 	RegisterUser(login, password string) models.IError
 }
 
-func NewUserService(db *sqlx.DB, redisConn *redis.Client) IUserService {
+func NewUserService(
+	userRepo IUserServiceUserRepo,
+	postsRepo IUserServicePostsRepo,
+	userSessionRepo IUserServiceUserSessionRepo,
+	permissionsRepo IUserServicePermissionsRepo,
+	generator IUserServiceGenerator,
+) IUserService {
 	return &userService{
-		userRepo:        repositories.NewUserRepo(db),
-		postsRepo:       repositories.NewPostsRepo(db),
-		userSessionRepo: repositories.NewUserSessionRepo(redisConn),
-		permissionsRepo: repositories.NewPermissionsRepo(db),
-		generator:       utils.NewGenerator(),
+		userRepo:        userRepo,
+		postsRepo:       postsRepo,
+		userSessionRepo: userSessionRepo,
+		permissionsRepo: permissionsRepo,
+		generator:       generator,
 	}
 }
 
 type userService struct {
-	userRepo interface {
-		GetUserById(idUser int64) (models.User, error)
-		GetUserByLogin(login string) (models.User, error)
-		InsertUser(login, password string) (int64, error)
-	}
-	postsRepo interface {
-		GetUserPosts(idUser int64) ([]models.Post, error)
-	}
-	userSessionRepo interface {
-		CreateSession(idUser int64, password string) (models.UserSession, error)
-		GetUserSession(token string) (models.UserSession, error)
-	}
-	permissionsRepo interface {
-		GetPermissionsList(idUser int64) ([]models.Permission, error)
-	}
-	generator interface {
-		CheckPassword(hashedPassword, password string) error
-		HashPassword(password string) (string, error)
-	}
+	userRepo        IUserServiceUserRepo
+	postsRepo       IUserServicePostsRepo
+	userSessionRepo IUserServiceUserSessionRepo
+	permissionsRepo IUserServicePermissionsRepo
+	generator       IUserServiceGenerator
 }
 
 func (c userService) GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError) {

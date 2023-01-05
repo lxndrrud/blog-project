@@ -6,11 +6,14 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
 	"github.com/lxndrrud/blog-project/models"
-	"github.com/lxndrrud/blog-project/services"
 )
+
+type IDepUserService interface {
+	GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
+	LoginUser(login, password string) (string, models.User, []models.Permission, models.IError)
+	RegisterUser(login, password string) models.IError
+}
 
 type IUserController interface {
 	GetUserAndPosts(ctx *gin.Context)
@@ -18,18 +21,14 @@ type IUserController interface {
 	RegisterUser(ctx *gin.Context)
 }
 
-func NewUserController(db *sqlx.DB, redisConn *redis.Client) IUserController {
+func NewUserController(userService IDepUserService) IUserController {
 	return &userController{
-		userService: services.NewUserService(db, redisConn),
+		userService: userService,
 	}
 }
 
 type userController struct {
-	userService interface {
-		GetUserAndPosts(idUser int64) (models.User, []models.Post, models.IError)
-		LoginUser(login, password string) (string, models.User, []models.Permission, models.IError)
-		RegisterUser(login, password string) models.IError
-	}
+	userService IDepUserService
 }
 
 func (c userController) GetUserAndPosts(ctx *gin.Context) {
