@@ -4,20 +4,29 @@ import (
 	"net/http"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/jmoiron/sqlx"
 	"github.com/lxndrrud/blog-project/models"
-	"github.com/lxndrrud/blog-project/repositories"
 )
+
+type IPermissionInfraPermissionRepo interface {
+	GetPermissionsList(idUser int64) ([]models.Permission, error)
+}
+
+type IPermissionInfraUserSessionRepo interface {
+	GetUserSession(token string) (models.UserSession, error)
+}
 
 type IPermissionInfra interface {
 	GetPermissionsList(token string) ([]models.Permission, models.IError)
 	GetUserIdByToken(token string) (int64, models.IError)
 }
 
-func NewPermissionInfra(db *sqlx.DB, redisConn *redis.Client) IPermissionInfra {
+func NewPermissionInfra(
+	permissionRepo IPermissionInfraPermissionRepo,
+	userSessionRepo IPermissionInfraUserSessionRepo,
+) IPermissionInfra {
 	return &permissionInfra{
-		permissionRepo:  repositories.NewPermissionsRepo(db),
-		userSessionRepo: repositories.NewUserSessionRepo(redisConn),
+		permissionRepo:  permissionRepo,
+		userSessionRepo: userSessionRepo,
 	}
 }
 

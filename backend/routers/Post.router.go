@@ -12,9 +12,14 @@ import (
 )
 
 func setupPostRouter(router *gin.RouterGroup, db *sqlx.DB, redisConn *redis.Client) {
+	permissionRepo := repositories.NewPermissionsRepo(db)
+	userSessionRepo := repositories.NewUserSessionRepo(redisConn)
+	permissionInfra := infrastructure.NewPermissionInfra(
+		permissionRepo,
+		userSessionRepo,
+	)
 	postRepo := repositories.NewPostsRepo(db)
 	userRepo := repositories.NewUserRepo(db)
-	permissionInfra := infrastructure.NewPermissionInfra(db, redisConn)
 	fileProcessor := utils.NewFileProcessor()
 	permissionChecker := utils.NewPermissionChecker()
 
