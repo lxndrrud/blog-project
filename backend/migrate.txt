@@ -1,7 +1,0 @@
-
-# Up migrations and run seeds
-docker exec -it backend-blog go run ./db/script.go -m=up -s=y
-
-# Down migrations
-docker exec -it backend-blog go run ./db/script.go -m=down
-
