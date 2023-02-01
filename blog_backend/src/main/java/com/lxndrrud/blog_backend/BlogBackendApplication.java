@@ -1,13 +1,13 @@
-package org.lxndrrud.blog_project;
+package com.lxndrrud.blog_backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BlogProjectApplication {
+public class BlogBackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BlogProjectApplication.class, args);
+		SpringApplication.run(BlogBackendApplication.class, args);
 	}
 
 }
