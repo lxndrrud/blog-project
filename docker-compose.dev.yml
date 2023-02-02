@@ -38,19 +38,19 @@ services:
     networks: 
       - blog_network
 
-  backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    container_name: backend-blog
-    depends_on:
-      - postgres
-    volumes:
-      - ./backend:/go/src/goserver
-    ports:
-      - 8091:8001
-    networks: 
-      - blog_network
+  #backend:
+  #  build: 
+  #    context: ./backend
+  #    dockerfile: Dockerfile.dev
+  #  container_name: backend-blog
+  #  depends_on:
+  #    - postgres
+  #  volumes:
+  #    - ./backend:/go/src/goserver
+  #  ports:
+  #    - 8091:8001
+  #  networks: 
+  #    - blog_network
 
   frontend:
       build: 
@@ -69,12 +69,12 @@ services:
     container_name: nginx-blog
     restart: unless-stopped
     depends_on:
-      - backend
+      #- backend
       - frontend
     ports:
         - '80:80'
     links:
-        - backend
+        #- backend
         - postgres
         - adminer
     networks:
