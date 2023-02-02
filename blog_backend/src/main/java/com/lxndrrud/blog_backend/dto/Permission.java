@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.List;
 
 @Data
-@Entity
+@Entity(name = "permissions")
 public class Permission implements Serializable {
     @Id
     private long id;

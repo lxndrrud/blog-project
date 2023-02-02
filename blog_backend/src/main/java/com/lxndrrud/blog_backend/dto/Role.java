@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.List;
 
 @Data
-@Entity
+@Entity(name = "roles")
 public class Role implements Serializable {
     @Id
     private long id;

@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
-@Entity
+@Entity(name = "posts")
 public class Post implements Serializable {
     @Id
     private long id;
