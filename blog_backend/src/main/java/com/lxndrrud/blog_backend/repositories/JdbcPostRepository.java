@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public class JdbcPostRepository implements IPostRepository {
     private final JdbcTemplate jdbcTemplate;
 
