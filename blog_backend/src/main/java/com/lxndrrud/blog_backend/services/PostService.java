@@ -4,9 +4,8 @@ import com.lxndrrud.blog_backend.dto.Post;
 import com.lxndrrud.blog_backend.repositories.IPostRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PostService implements IPostService {
@@ -19,7 +18,11 @@ public class PostService implements IPostService {
     }
 
     public List<Post> getAll() {
-        Iterable<Post> posts = this.postRepository.getAll();
-        return new ArrayList<Post>((Collection) posts);
+        return this.postRepository.getAll();
+    }
+
+    @Override
+    public Optional<Post> getById(long id) {
+        return this.postRepository.getById(id);
     }
 }

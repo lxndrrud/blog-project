@@ -1,13 +1,13 @@
 package com.lxndrrud.blog_backend.repositories;
 
 import com.lxndrrud.blog_backend.dto.Post;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.metadata.GenericTableMetaDataProvider;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class JdbcPostRepository implements IPostRepository {
@@ -17,10 +17,21 @@ public class JdbcPostRepository implements IPostRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
     @Override
-    public Iterable<Post> getAll() {
+    public List<Post> getAll() {
         return jdbcTemplate.query(
-                "select id, text, created_at from public.posts",
-                this::mapRowToPost);
+            "select id, text, created_at from public.posts",
+            this::mapRowToPost);
+    }
+
+    @Override
+    public Optional<Post> getById(long id) {
+        List<Post> posts = jdbcTemplate.query(
+            "select id, text, created_at from public.posts where id = ?",
+            this::mapRowToPost,
+            id);
+        return posts.size() == 0
+                ? Optional.empty()
+                : Optional.of(posts.get(0));
     }
 
     private Post mapRowToPost(ResultSet row, int rowNum) throws SQLException {
