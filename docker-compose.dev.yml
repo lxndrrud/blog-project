@@ -27,16 +27,16 @@ services:
     volumes:
       - ./redis/redis.conf:/etc/redis/redis.conf
 
-  adminer:
-    image: adminer
-    container_name: adminer-blog
-    restart: always
-    ports:
-      - 8090:8080
-    depends_on:
-      - postgres
-    networks: 
-      - blog_network
+  #adminer:
+  #  image: adminer
+  #  container_name: adminer-blog
+  #  restart: always
+  #  ports:
+  #    - 8090:8080
+  #  depends_on:
+  #    - postgres
+  #  networks: 
+  #    - blog_network
 
   backend:
     build: 
@@ -46,7 +46,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./backend:/go/src/goserver
+      - ./backend:/var/www/api
     ports:
       - 8091:8001
     networks: 
@@ -76,7 +76,7 @@ services:
     links:
         - backend
         - postgres
-        - adminer
+        #- adminer
     networks:
         - blog_network
     volumes:
