@@ -1,11 +1,8 @@
 import { Knex } from "knex";
+import { TPermission } from "../types/Permission.type";
 
 export interface IPermissionRepo {
-    getPermissionsList(idUser: number): Promise<{
-        id: number;
-        title: string;
-        code: string;
-    }[]>
+    getPermissionsList(idUser: number): Promise<TPermission[]>
 }
 
 export class PermissionPostgresRepo implements IPermissionRepo {
@@ -14,11 +11,7 @@ export class PermissionPostgresRepo implements IPermissionRepo {
     ) {}
 
     public async getPermissionsList(idUser: number) {
-        const permissions: {
-            id: number,
-            title: string,
-            code: string
-        }[] = await this.connection('public.users as u')
+        const permissions: TPermission[] = await this.connection('public.users as u')
             .innerJoin('public.roles as r', 'r.id', '=', 'u.id_role')
             .innerJoin('public.roles_permissions as rp', 'rp.id_role', '=', 'r.id')
             .innerJoin('public.permissions as p', 'p.id', '=', 'rp.id_permission')

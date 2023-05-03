@@ -1,66 +1,13 @@
 import { Knex } from "knex";
+import { TPost } from "../types/Post.type";
 
 export interface IPostRepo {
-    getPostById(idPost: number): Promise<{
-        id: number;
-        id_author: number;
-        author_login: string;
-        title: string;
-        annotation: string;
-        text: string;
-        picture: string;
-        views: number;
-        approved: boolean;
-        rejected: boolean;
-        time_start: Date;
-        time_end: Date;
-        created_at: Date;
-    } | undefined>
-    getApprovedPosts(): Promise<{
-        id: number;
-        id_author: number;
-        author_login: string;
-        title: string;
-        annotation: string;
-        text: string;
-        picture: string;
-        views: number;
-        approved: boolean;
-        rejected: boolean;
-        time_start: Date;
-        time_end: Date;
-        created_at: Date;
-    }[]>
-    getPostNeedToApprove(idPost: number): Promise<{
-        id: number;
-        id_author: number;
-        author_login: string;
-        title: string;
-        annotation: string;
-        text: string;
-        picture: string;
-        views: number;
-        approved: boolean;
-        rejected: boolean;
-        time_start: Date;
-        time_end: Date;
-        created_at: Date;
-    } | undefined>
-    getUserPosts(idUser: number, isOwner?: boolean): Promise<{
-        id: number;
-        id_author: number;
-        author_login: string;
-        title: string;
-        annotation: string;
-        text: string;
-        picture: string;
-        views: number;
-        approved: boolean;
-        rejected: boolean;
-        time_start: Date;
-        time_end: Date;
-        created_at: Date;
-    }[]>
+    getPostById(idPost: number): Promise<TPost | undefined>
+    getApprovedPosts(): Promise<TPost[]>
+    getApprovedPost(idPost: number): Promise<TPost | undefined>
+    getPostsNeedToApprove(): Promise<TPost[]>
+    getPostNeedToApprove(idPost: number): Promise<TPost | undefined>
+    getUserPosts(idUser: number, isOwner?: boolean): Promise<TPost[]>
     insertPost(payload: {
         title: string;
         text: string;
@@ -82,21 +29,7 @@ export class PostPostgresRepo implements IPostRepo {
     ) {}
 
     public async getPostById(idPost: number) {
-        const post: {
-            id: number,
-            id_author: number,
-            author_login: string,
-            title: string,
-            annotation: string,
-            text: string,
-            picture: string,
-            views: number,
-            approved: boolean,
-            rejected: boolean,
-            time_start: Date,
-            time_end: Date,
-            created_at: Date,
-        } | undefined = await this.connection('public.posts as p')
+        const post: TPost | undefined = await this.connection('public.posts as p')
             .select('p.*', 'u.login as author_login')
             .innerJoin('public.users as u', 'u.id', 'p.id_author')
             .where('p.id', idPost)
@@ -105,21 +38,7 @@ export class PostPostgresRepo implements IPostRepo {
     }
 
     public async getApprovedPosts() {
-        const posts: {
-            id: number,
-            id_author: number,
-            author_login: string,
-            title: string,
-            annotation: string,
-            text: string,
-            picture: string,
-            views: number,
-            approved: boolean,
-            rejected: boolean,
-            time_start: Date,
-            time_end: Date,
-            created_at: Date,
-        }[] = await this.connection('public.posts as p')
+        const posts: TPost[] = await this.connection('public.posts as p')
             .select('p.*', 'u.login as author_login')
             .innerJoin('public.users as u', 'u.id', 'p.id_author')
             .where('p.approved', true)
@@ -135,22 +54,27 @@ export class PostPostgresRepo implements IPostRepo {
         return posts
     }
 
+    public async getApprovedPost(idPost: number) {
+        const post: TPost | undefined = await this.connection('public.posts as p')
+            .select('p.*', 'u.login as author_login')
+            .innerJoin('public.users as u', 'u.id', 'p.id_author')
+            .where('p.id', idPost)
+            .andWhere('p.approved', true)
+            .andWhere(qb => {
+                qb.where('p.time_start IS NULL')
+                qb.orWhere('p.time_start <= NOW()')
+            })
+            .andWhere(qb => {
+                qb.where('p.time_end IS NULL')
+                qb.orWhere('p.time_end > NOW()')
+            })
+            .orderBy('p.views', 'desc')
+            .first()
+        return post
+    }
+
     public async getPostsNeedToApprove() {
-        const posts: {
-            id: number,
-            id_author: number,
-            author_login: string,
-            title: string,
-            annotation: string,
-            text: string,
-            picture: string,
-            views: number,
-            approved: boolean,
-            rejected: boolean,
-            time_start: Date,
-            time_end: Date,
-            created_at: Date,
-        }[] = await this.connection('public.posts as p')
+        const posts: TPost[] = await this.connection('public.posts as p')
             .select('p.*', 'u.login as author_login')
             .innerJoin('public.users as u', 'u.id', 'p.id_author')
             .where('p.approved', false)
@@ -167,21 +91,7 @@ export class PostPostgresRepo implements IPostRepo {
     }
 
     public async getPostNeedToApprove(idPost: number) {
-        const post: {
-            id: number,
-            id_author: number,
-            author_login: string,
-            title: string,
-            annotation: string,
-            text: string,
-            picture: string,
-            views: number,
-            approved: boolean,
-            rejected: boolean,
-            time_start: Date,
-            time_end: Date,
-            created_at: Date,
-        } | undefined = await this.connection('public.posts as p')
+        const post: TPost | undefined = await this.connection('public.posts as p')
             .select('p.*', 'u.login as author_login')
             .innerJoin('public.users as u', 'u.id', 'p.id_author')
             .where('p.id', idPost)
@@ -192,21 +102,7 @@ export class PostPostgresRepo implements IPostRepo {
     }
 
     public async getUserPosts(idUser: number, isOwner?: boolean) {
-        const posts: {
-            id: number,
-            id_author: number,
-            author_login: string,
-            title: string,
-            annotation: string,
-            text: string,
-            picture: string,
-            views: number,
-            approved: boolean,
-            rejected: boolean,
-            time_start: Date,
-            time_end: Date,
-            created_at: Date,
-        }[] = await this.connection('public.posts as p')
+        const posts: TPost[] = await this.connection('public.posts as p')
             .select('p.*', 'u.login as author_login')
             .innerJoin('public.users as u', 'u.id', 'p.id_author')
             .where('u.id', idUser)
