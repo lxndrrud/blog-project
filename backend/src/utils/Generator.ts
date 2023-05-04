@@ -9,7 +9,8 @@ export interface IGenerator {
 
 export class Generator implements IGenerator {
     public async generateToken(idUser: number) {
-        return bcrypt.hash(idUser.toString(), 10)
+        const dateNow = new Date(Date.now()).toString()
+        return bcrypt.hash(idUser.toString() + dateNow, 10)
     }
 
     public async hashPassword(password: string) {

@@ -1,7 +1,11 @@
 import { Redis } from "ioredis";
+import { IGenerator } from "../utils/Generator";
 
 export interface IUserSessionRepo {
-    createSession(idUser: number): Promise<void>
+    createSession(idUser: number): Promise<{
+        idUser: number;
+        token: string;
+    }>
     getUserSessionByToken(token: string): Promise<{
         idUser: number;
         token: string;
@@ -10,12 +14,13 @@ export interface IUserSessionRepo {
 
 export class UserSessionRedisRepo implements IUserSessionRepo {
     constructor(
-        private readonly connection: Redis
+        private readonly connection: Redis,
+        private readonly generator: IGenerator
     ) {}
 
     public async createSession(idUser: number) {
         // Создание токена
-        const token = 'asdasdad'
+        const token = await this.generator.generateToken(idUser)
         // Проверка существующего сеанса
         const oldSession = await this.connection.get('user_session:' + idUser)
         if (oldSession) {
@@ -36,6 +41,9 @@ export class UserSessionRedisRepo implements IUserSessionRepo {
         await this.connection.setex('user_session_rev:' + token, 60 * 60 * 2, JSON.stringify({
             idUser, token
         }))
+        return {
+            idUser, token
+        }
     }
 
     public async getUserSessionByToken(token: string) {
