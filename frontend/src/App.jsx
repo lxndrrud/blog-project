@@ -22,22 +22,22 @@ function App() {
                     <Route path="/login" element={ <LoginPage /> } />
                     <Route path="/register" element={ <RegisterPage /> } />
                     <Route path="/newPost" element={ 
-                        <PermissionMiddleware permission={'СОЗД_ПОСТЫ'}>
+                        <PermissionMiddleware permissionCode={'СОЗД_ПОСТЫ'}>
                             <CreatePostPage />
                         </PermissionMiddleware> 
                     } />
                     <Route path="/postsToCheck" element={ 
-                        <PermissionMiddleware permission={'МОДЕР_ПОСТЫ'}>
+                        <PermissionMiddleware permissionCode={'МОДЕР_ПОСТЫ'}>
                             <ApprovementPostsPage />
                         </PermissionMiddleware> 
                     } />
                     <Route path="/approve/:idPost" element={
-                        <PermissionMiddleware permission={'МОДЕР_ПОСТЫ'}>
+                        <PermissionMiddleware permissionCode={'МОДЕР_ПОСТЫ'}>
                             <ApprovePostPage />
                         </PermissionMiddleware>
                     } />
                     <Route path="/reject/:idPost" element={
-                        <PermissionMiddleware permission={'МОДЕР_ПОСТЫ'}>
+                        <PermissionMiddleware permissionCode={'МОДЕР_ПОСТЫ'}>
                             <RejectPostPage />
                         </PermissionMiddleware>
                     } />

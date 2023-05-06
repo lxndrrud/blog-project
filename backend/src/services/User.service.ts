@@ -17,7 +17,6 @@ export interface IUserService {
         user: {
             id: number;
             login: string;
-            password: string;
         };
         session: {
             idUser: number;
@@ -59,7 +58,10 @@ export class UserService implements IUserService {
         const sessionObject = await this.userSessionRepo.createSession(user.id)
         const permissionList = await this.permissionRepo.getPermissionsList(user.id)
         return {
-            user, session: sessionObject, permissions: permissionList
+            user: {
+                id: user.id,
+                login: user.login
+            }, session: sessionObject, permissions: permissionList
         }
     }
 

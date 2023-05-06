@@ -1,14 +1,11 @@
 import React from 'react'
-import { useSelector } from 'react-redux'
+import { useStore } from 'react-redux'
 import { Navigate } from 'react-router-dom'
+import { permissionCheck } from '../utils/PermissionCheck'
 
-function checkPermissions(permissions, permission) {
-    return permissions.findIndex(perm => perm.title === permission) !== -1
-}
-
-function PermissionMiddleware({ children, permission }) {
-    const permissions = useSelector(state => state.users.permissions)
-    if (!checkPermissions(permissions, permission)) {
+function PermissionMiddleware({ children, permissionCode }) {
+    const store = useStore()
+    if (!permissionCheck(store, permissionCode)) {
         return (
             <Navigate to={'/'} />
         )

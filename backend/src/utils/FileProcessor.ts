@@ -1,5 +1,6 @@
 import fileUpload from 'express-fileupload'
 import fs from 'fs/promises'
+import path from 'path'
 import { IGenerator } from './Generator'
 
 export interface IFileProcessor {
@@ -13,12 +14,14 @@ export class FileProcessor implements IFileProcessor {
     ) {}
 
     public async saveFileOnDisk(file: fileUpload.UploadedFile) {
+        const fileExtension = file.name.split('.')[1]
         const filename = await this.generator.generateRandomString(15)
-        await file.mv(`../../storage/${filename}`)
-        return filename
+        await file.mv(path.join(__dirname, '..', '..', 'storage', `${filename}.${fileExtension}`))
+        return `/${filename}.${fileExtension}`
     }
 
     public async deleteFile(filename: string) {
-        await fs.unlink(`../../storage/${filename}`)
+        // Название файла содержит начальный слэш
+        await fs.unlink(path.join(__dirname, '..', '..', 'storage', filename.slice(1)))
     }
 }

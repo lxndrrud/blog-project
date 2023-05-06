@@ -28,8 +28,8 @@ function PostDetail() {
                         <div className='flex flex-col mt-2 text-[14px]'>
                             <h4>Просмотров: {post.views}</h4>
                             <h4>Время создания: { moment(post.created_at).format('DD.MM.YYYY HH:mm').toString()} </h4>
-                            { post.time_start.Valid && <h4>Время начала доступности: {moment(post.time_start.Time).format('DD.MM.YYYY HH:mm').toString()}</h4> }
-                            { post.time_end.Valid && <h4>Время конца доступности: {moment(post.time_end.Time).format('DD.MM.YYYY HH:mm').toString()}</h4> }
+                            { post.time_start && <h4>Время начала доступности: {moment(post.time_start).format('DD.MM.YYYY HH:mm').toString()}</h4> }
+                            { post.time_end && <h4>Время конца доступности: {moment(post.time_end).format('DD.MM.YYYY HH:mm').toString()}</h4> }
                         </div>
                         <div className='flex mt-2 self-center'>
                             { 

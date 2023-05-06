@@ -43,12 +43,12 @@ export class PostPostgresRepo implements IPostRepo {
             .innerJoin('public.users as u', 'u.id', 'p.id_author')
             .where('p.approved', true)
             .andWhere(qb => {
-                qb.where('p.time_start IS NULL')
-                qb.orWhere('p.time_start <= NOW()')
+                qb.whereRaw('p.time_start IS NULL')
+                qb.orWhereRaw('p.time_start <= NOW()')
             })
             .andWhere(qb => {
-                qb.where('p.time_end IS NULL')
-                qb.orWhere('p.time_end > NOW()')
+                qb.whereRaw('p.time_end IS NULL')
+                qb.orWhereRaw('p.time_end > NOW()')
             })
             .orderBy('p.views', 'desc')
         return posts
@@ -61,12 +61,12 @@ export class PostPostgresRepo implements IPostRepo {
             .where('p.id', idPost)
             .andWhere('p.approved', true)
             .andWhere(qb => {
-                qb.where('p.time_start IS NULL')
-                qb.orWhere('p.time_start <= NOW()')
+                qb.whereRaw('p.time_start IS NULL')
+                qb.orWhereRaw('p.time_start <= NOW()')
             })
             .andWhere(qb => {
-                qb.where('p.time_end IS NULL')
-                qb.orWhere('p.time_end > NOW()')
+                qb.whereRaw('p.time_end IS NULL')
+                qb.orWhereRaw('p.time_end > NOW()')
             })
             .orderBy('p.views', 'desc')
             .first()
@@ -80,12 +80,12 @@ export class PostPostgresRepo implements IPostRepo {
             .where('p.approved', false)
             .andWhere('p.rejected', false)
             .andWhere(qb => {
-                qb.where('p.time_start IS NULL')
-                qb.orWhere('p.time_start <= NOW()')
+                qb.whereRaw('p.time_start IS NULL')
+                qb.orWhereRaw('p.time_start <= NOW()')
             })
             .andWhere(qb => {
-                qb.where('p.time_end IS NULL')
-                qb.orWhere('p.time_end > NOW()')
+                qb.whereRaw('p.time_end IS NULL')
+                qb.orWhereRaw('p.time_end > NOW()')
             })
         return posts
     }
@@ -110,12 +110,12 @@ export class PostPostgresRepo implements IPostRepo {
                 if (!isOwner) {
                     qb.where('p.approved', true)
                     qb.andWhere(qb1 => {
-                        qb1.where('p.time_start IS NULL')
-                        qb1.orWhere('p.time_start <= NOW()')
+                        qb1.whereRaw('p.time_start IS NULL')
+                        qb1.orWhereRaw('p.time_start <= NOW()')
                     })
                     qb.andWhere(qb1 => {
-                        qb1.where('p.time_end IS NULL')
-                        qb1.orWhere('p.time_end > NOW()')
+                        qb1.whereRaw('p.time_end IS NULL')
+                        qb1.orWhereRaw('p.time_end > NOW()')
                     })
                 }
             })
@@ -140,11 +140,11 @@ export class PostPostgresRepo implements IPostRepo {
     }
 
     public async addViews(idPost: number, viewsQuantity: number) {
-        await this.connection('public.posts as p')
-            .where('p.id', idPost)
-            .update({
-                views: "views + " + viewsQuantity.toString()
-            })
+        await this.connection.raw(`
+            UPDATE public.posts
+            SET views = views + ${viewsQuantity}
+            WHERE id = ${idPost}
+        `)
     }
 
     public async approvePost(idPost: number) {

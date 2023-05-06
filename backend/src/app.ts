@@ -13,5 +13,11 @@ export async function Bootstrap() {
 
     app.use(MainRouter)
 
+    app.use((req, res) => {
+        res.status(404).json({
+            message: 'Страница не найдена!'
+        })
+    })
+
     return app
 }

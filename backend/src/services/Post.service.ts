@@ -37,7 +37,7 @@ export class PostService implements IPostService {
     public async getUserPosts(token: string) {
         const sessionObject = await this.userSessionRepo.getUserSessionByToken(token)
         if (!sessionObject) throw new Error("Сеанс не найден. Пожалуйста, войдите по новой.")
-        const posts = await this.postsRepo.getUserPosts(sessionObject.idUser)
+        const posts = await this.postsRepo.getUserPosts(sessionObject.idUser, true)
         return posts
     }
 

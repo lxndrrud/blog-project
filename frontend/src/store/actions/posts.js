@@ -28,8 +28,12 @@ export const createPostRequest = createAsyncThunk(
             data.append('title', title)
             data.append('annotation', annotation)
             data.append('text', text)
-            data.append('timeStart', timeStart ? timeStart + " 00:00:00" : null)
-            data.append('timeEnd', timeEnd ? timeEnd + " 00:00:00" : null)
+            if (timeStart) {
+                data.append('timeStart', timeStart + " 00:00:00")
+            }
+            if (timeEnd) {
+                data.append('timeEnd', timeEnd + " 00:00:00")
+            }
 
             const response = await axios.post("/backend/posts/new", data, {
                 headers: {
