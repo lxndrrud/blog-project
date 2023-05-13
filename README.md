@@ -4,18 +4,15 @@
 Сервисы связаны между собой при помощи прокси-сервера Nginx.
 
 <ul>
-  <li>Backend (Серверная часть) написана на Golang/Gin/sqlx/go-redis.</li> 
-<li>Осуществлено end-to-end тестирование при помощи скриптов на Python.</li> 
-<li>Frontend (Клиентская часть) написана на JavaScript/React/Redux/TailwindCSS.</li> 
+  <li>Backend (Серверная часть) написана на Node.js+Typescript/Express/Knex/IORedis.</li> 
+  <li>Frontend (Клиентская часть) написана на JavaScript/React/Redux/TailwindCSS.</li> 
 </ul>
-  
-Средство администрирования PostgreSQL - adminer.
 
 
 Базы данных: 
   <ul>
-  <li>PostgreSQL как основная база хранения данных.</li> 
-  <li>Redis как база для кэширования и хранения сеансов пользователей</li> 
+    <li>PostgreSQL как основная база хранения данных.</li> 
+    <li>Redis как база для кэширования и хранения сеансов пользователей</li> 
   </ul>
 Аутентификация по токену.
 
